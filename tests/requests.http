@@ -1,0 +1,30 @@
+GET http://localhost:8080/books HTTP/1.1
+
+###
+GET http://localhost:8080/book/1 HTTP/1.1
+
+###
+
+POST http://localhost:8080/book HTTP/1.1
+content-type: application/json
+
+{
+  "title": "Go by Example: Programmer guide to idiomatic and testable code",
+  "author": "Inanc Gumus",
+  "year": 2021
+}
+
+###
+
+PUT localhost:8080/book/1 HTTP/1.1
+content-type: application/json
+
+{
+    "title": "Go by Example: Programmers guide to idiomatic and testable code - Updated",
+    "author": "Inanc Gumus",
+    "year": 2023
+}
+
+###
+
+DELETE localhost:8080/book/1 HTTP/1.1

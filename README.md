@@ -28,4 +28,12 @@ It is appreciated, though not required, if a Dockerfile is included.
 
 Just create a fork from the current repo and send it to us!
 
-Good luck, potential colleague!
+Good luck, potential colleague!'
+
+
+## My Plan 
+
+So because I am not really conlfident that I can build anything in GO, I will do it in a multistep approach.
+
+1)  
+
