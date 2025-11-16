@@ -1,10 +1,11 @@
-/*
 package api
 
 import (
 	"log"
 	"net/http"
 	"os"
+
+	"platform-go-challenge/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -28,13 +29,14 @@ func InitDB() {
 	}
 	log.Printf("DB_URL value: %s", dsn)
 
-	DB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	var err error
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
 	// migrate the schema
-	if err := DB.AutoMigrate(&Book{}); err != nil {
+	if err := DB.AutoMigrate(&models.Book{}); err != nil {
 		log.Fatal("Failed to migrate schema:", err)
 	}
 
@@ -44,15 +46,15 @@ func InitDB() {
 }
 
 func CreateBook(c *gin.Context) {
-	var book Book
+	var book models.Book
 
 	//bind the request body
 	if err := c.ShouldBindJSON(&book); err != nil {
-		ResponseJSON(c, http.StatusBadRequest, "Invalid input", nil)
+		models.ResponseJSON(c, http.StatusBadRequest, "Invalid input", nil)
 		return
 	}
 	DB.Create(&book)
-	ResponseJSON(c, http.StatusCreated, "Book created successfully", book)
+	models.ResponseJSON(c, http.StatusCreated, "Book created successfully", book)
 }
 
 func GetBooks(c *gin.Context) {
@@ -60,9 +62,9 @@ func GetBooks(c *gin.Context) {
 		log.Fatal("DB pointer is nil")
 	}
 
-	var books []Book
+	var books []models.Book
 	DB.Find(&books)
-	ResponseJSON(c, http.StatusOK, "Books retrieved successfully", books)
+	models.ResponseJSON(c, http.StatusOK, "Books retrieved successfully", books)
 }
 
 func GetBook(c *gin.Context) {
@@ -70,12 +72,12 @@ func GetBook(c *gin.Context) {
 		log.Fatal("DB pointer is nil")
 	}
 
-	var book Book
+	var book models.Book
 	if err := DB.First(&book, c.Param("id")).Error; err != nil {
-		ResponseJSON(c, http.StatusNotFound, "Book not found", nil)
+		models.ResponseJSON(c, http.StatusNotFound, "Book not found", nil)
 		return
 	}
-	ResponseJSON(c, http.StatusOK, "Book retrieved successfully", book)
+	models.ResponseJSON(c, http.StatusOK, "Book retrieved successfully", book)
 }
 
 func UpdateBook(c *gin.Context) {
@@ -83,20 +85,20 @@ func UpdateBook(c *gin.Context) {
 		log.Fatal("DB pointer is nil")
 	}
 
-	var book Book
+	var book models.Book
 	if err := DB.First(&book, c.Param("id")).Error; err != nil {
-		ResponseJSON(c, http.StatusNotFound, "Book not found", nil)
+		models.ResponseJSON(c, http.StatusNotFound, "Book not found", nil)
 		return
 	}
 
 	// bind the request body
 	if err := c.ShouldBindJSON(&book); err != nil {
-		ResponseJSON(c, http.StatusBadRequest, "Invalid input", nil)
+		models.ResponseJSON(c, http.StatusBadRequest, "Invalid input", nil)
 		return
 	}
 
 	DB.Save(&book)
-	ResponseJSON(c, http.StatusOK, "Book updated successfully", book)
+	models.ResponseJSON(c, http.StatusOK, "Book updated successfully", book)
 }
 
 func DeleteBook(c *gin.Context) {
@@ -104,11 +106,10 @@ func DeleteBook(c *gin.Context) {
 		log.Fatal("DB pointer is nil")
 	}
 
-	var book Book
+	var book models.Book
 	if err := DB.Delete(&book, c.Param("id")).Error; err != nil {
-		ResponseJSON(c, http.StatusNotFound, "Book not found", nil)
+		models.ResponseJSON(c, http.StatusNotFound, "Book not found", nil)
 		return
 	}
-	ResponseJSON(c, http.StatusOK, "Book deleted successfully", nil)
+	models.ResponseJSON(c, http.StatusOK, "Book deleted successfully", nil)
 }
-*/
