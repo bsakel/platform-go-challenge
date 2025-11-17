@@ -10,9 +10,7 @@ RUN go mod download
 COPY . .
 
 # Build the application
-# Adjust the path below to point to your main package
-# Common patterns: ./cmd/main.go, ./cmd/server/main.go, or ./main.go
-RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o main ./main.go
 
 # Final stage
 FROM alpine:latest

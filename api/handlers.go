@@ -3,113 +3,79 @@ package api
 import (
 	"log"
 	"net/http"
-	"os"
 
+	"platform-go-challenge/api/model"
+	"platform-go-challenge/db"
 	"platform-go-challenge/models"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
-
-func InitDB() {
-
-	dsn, isSet := os.LookupEnv("DB_URL")
-	if !isSet {
-		log.Println("DB_URL environment variable not set, loading from .env file")
-		err := godotenv.Load()
-		if err != nil {
-			log.Fatal("Failed to connect to database:", err)
-		}
-
-		dsn = os.Getenv("DB_URL")
-	}
-	log.Printf("DB_URL value: %s", dsn)
-
-	var err error
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
-	}
-
-	// migrate the schema
-	if err := DB.AutoMigrate(&models.Book{}); err != nil {
-		log.Fatal("Failed to migrate schema:", err)
-	}
-
-	if DB != nil {
-		log.Println("DB connection established")
-	}
-}
-
-func CreateBook(c *gin.Context) {
-	var book models.Book
+func CreateAudience(c *gin.Context) {
+	var audience models.Audience
 
 	//bind the request body
-	if err := c.ShouldBindJSON(&book); err != nil {
-		models.ResponseJSON(c, http.StatusBadRequest, "Invalid input", nil)
+	if err := c.ShouldBindJSON(&audience); err != nil {
+		model.ResponseJSON(c, http.StatusBadRequest, "Invalid input", nil)
 		return
 	}
-	DB.Create(&book)
-	models.ResponseJSON(c, http.StatusCreated, "Book created successfully", book)
+	db.GormDB.Create(&audience)
+	model.ResponseJSON(c, http.StatusCreated, "Audience created successfully", audience)
 }
 
-func GetBooks(c *gin.Context) {
-	if DB == nil {
+func GetAudiences(c *gin.Context) {
+	if db.GormDB == nil {
 		log.Fatal("DB pointer is nil")
 	}
 
-	var books []models.Book
-	DB.Find(&books)
-	models.ResponseJSON(c, http.StatusOK, "Books retrieved successfully", books)
+	var audiences []models.Audience
+	db.GormDB.Find(&audiences)
+	model.ResponseJSON(c, http.StatusOK, "Audiences retrieved successfully", audiences)
 }
 
-func GetBook(c *gin.Context) {
-	if DB == nil {
+func GetAudience(c *gin.Context) {
+	if db.GormDB == nil {
 		log.Fatal("DB pointer is nil")
 	}
 
-	var book models.Book
-	if err := DB.First(&book, c.Param("id")).Error; err != nil {
-		models.ResponseJSON(c, http.StatusNotFound, "Book not found", nil)
+	var audience models.Audience
+	if err := db.GormDB.First(&audience, c.Param("id")).Error; err != nil {
+		model.ResponseJSON(c, http.StatusNotFound, "Audience not found", nil)
 		return
 	}
-	models.ResponseJSON(c, http.StatusOK, "Book retrieved successfully", book)
+	model.ResponseJSON(c, http.StatusOK, "Audience retrieved successfully", audience)
 }
 
-func UpdateBook(c *gin.Context) {
-	if DB == nil {
+func UpdateAudience(c *gin.Context) {
+	if db.GormDB == nil {
 		log.Fatal("DB pointer is nil")
 	}
 
-	var book models.Book
-	if err := DB.First(&book, c.Param("id")).Error; err != nil {
-		models.ResponseJSON(c, http.StatusNotFound, "Book not found", nil)
+	var audience models.Audience
+	if err := db.GormDB.First(&audience, c.Param("id")).Error; err != nil {
+		model.ResponseJSON(c, http.StatusNotFound, "Audience not found", nil)
 		return
 	}
 
 	// bind the request body
-	if err := c.ShouldBindJSON(&book); err != nil {
-		models.ResponseJSON(c, http.StatusBadRequest, "Invalid input", nil)
+	if err := c.ShouldBindJSON(&audience); err != nil {
+		model.ResponseJSON(c, http.StatusBadRequest, "Invalid input", nil)
 		return
 	}
 
-	DB.Save(&book)
-	models.ResponseJSON(c, http.StatusOK, "Book updated successfully", book)
+	db.GormDB.Save(&audience)
+	model.ResponseJSON(c, http.StatusOK, "Audience updated successfully", audience)
 }
 
-func DeleteBook(c *gin.Context) {
-	if DB == nil {
+func DeleteAudience(c *gin.Context) {
+	if db.GormDB == nil {
 		log.Fatal("DB pointer is nil")
 	}
 
-	var book models.Book
-	if err := DB.Delete(&book, c.Param("id")).Error; err != nil {
-		models.ResponseJSON(c, http.StatusNotFound, "Book not found", nil)
+	var audience models.Audience
+	if err := db.GormDB.Delete(&audience, c.Param("id")).Error; err != nil {
+		model.ResponseJSON(c, http.StatusNotFound, "Audience not found", nil)
 		return
 	}
-	models.ResponseJSON(c, http.StatusOK, "Book deleted successfully", nil)
+	model.ResponseJSON(c, http.StatusOK, "Audience deleted successfully", nil)
 }
