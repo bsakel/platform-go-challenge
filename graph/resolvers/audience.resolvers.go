@@ -84,12 +84,6 @@ func (r *queryResolver) Audiences(ctx context.Context) ([]*models.Audience, erro
 
 // Audience is the resolver for the audience field.
 func (r *queryResolver) Audience(ctx context.Context, id string) (*models.Audience, error) {
-	// Use DataLoader if available in context
-	if loader := graph.GetAudienceLoader(ctx); loader != nil {
-		return loader.Load(ctx, id)
-	}
-
-	// Fallback to direct DB query
 	var audience models.Audience
 	if err := r.DB.First(&audience, id).Error; err != nil {
 		return nil, fmt.Errorf("audience not found")

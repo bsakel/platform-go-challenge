@@ -5,7 +5,6 @@ go 1.25.4
 require (
 	github.com/99designs/gqlgen v0.17.83
 	github.com/gin-gonic/gin v1.11.0
-	github.com/graph-gophers/dataloader/v7 v7.1.2
 	github.com/joho/godotenv v1.5.1
 	github.com/vektah/gqlparser/v2 v2.5.31
 	gorm.io/driver/postgres v1.6.0
