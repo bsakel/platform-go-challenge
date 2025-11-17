@@ -1,4 +1,4 @@
-package graph
+package resolvers
 
 // This file will be automatically regenerated based on the schema, any resolver implementations
 // will be copied through when generating and any unknown code will be moved to the end.
@@ -7,6 +7,7 @@ package graph
 import (
 	"context"
 	"fmt"
+	"platform-go-challenge/graph"
 	"platform-go-challenge/graph/model"
 	"platform-go-challenge/models"
 )
@@ -84,7 +85,7 @@ func (r *queryResolver) Audiences(ctx context.Context) ([]*models.Audience, erro
 // Audience is the resolver for the audience field.
 func (r *queryResolver) Audience(ctx context.Context, id string) (*models.Audience, error) {
 	// Use DataLoader if available in context
-	if loader := GetAudienceLoader(ctx); loader != nil {
+	if loader := graph.GetAudienceLoader(ctx); loader != nil {
 		return loader.Load(ctx, id)
 	}
 
@@ -96,14 +97,14 @@ func (r *queryResolver) Audience(ctx context.Context, id string) (*models.Audien
 	return &audience, nil
 }
 
-// Audience returns AudienceResolver implementation.
-func (r *Resolver) Audience() AudienceResolver { return &audienceResolver{r} }
+// Audience returns graph.AudienceResolver implementation.
+func (r *Resolver) Audience() graph.AudienceResolver { return &audienceResolver{r} }
 
-// Mutation returns MutationResolver implementation.
-func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
+// Mutation returns graph.MutationResolver implementation.
+func (r *Resolver) Mutation() graph.MutationResolver { return &mutationResolver{r} }
 
-// Query returns QueryResolver implementation.
-func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
+// Query returns graph.QueryResolver implementation.
+func (r *Resolver) Query() graph.QueryResolver { return &queryResolver{r} }
 
 type audienceResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }

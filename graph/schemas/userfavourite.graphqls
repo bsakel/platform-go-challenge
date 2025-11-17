@@ -1,0 +1,30 @@
+type UserFavourite {
+  id: ID!
+  userid: Int!
+  type: String!
+  assetid: Int!
+}
+
+input NewUserFavourite {
+  userid: Int!
+  type: String!
+  assetid: Int!
+}
+
+input UpdateUserFavourite {
+  userid: Int
+  type: String
+  assetid: Int
+}
+
+extend type Query {
+  userfavourites: [UserFavourite!]!
+  userfavourite(id: ID!): UserFavourite
+  userfavouritesByUser(userid: Int!): [UserFavourite!]!
+}
+
+extend type Mutation {
+  createUserFavourite(input: NewUserFavourite!): UserFavourite!
+  updateUserFavourite(id: ID!, input: UpdateUserFavourite!): UserFavourite!
+  deleteUserFavourite(id: ID!): Boolean!
+}

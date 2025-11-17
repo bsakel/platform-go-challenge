@@ -5,6 +5,7 @@ package graph
 import (
 	"bytes"
 	"context"
+	"embed"
 	"errors"
 	"fmt"
 	"platform-go-challenge/graph/model"
@@ -40,8 +41,11 @@ type Config struct {
 
 type ResolverRoot interface {
 	Audience() AudienceResolver
+	Chart() ChartResolver
+	Insight() InsightResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
+	UserFavourite() UserFavouriteResolver
 }
 
 type DirectiveRoot struct {
@@ -57,29 +61,92 @@ type ComplexityRoot struct {
 		NoOfPurchases func(childComplexity int) int
 	}
 
+	Chart struct {
+		ID         func(childComplexity int) int
+		Title      func(childComplexity int) int
+		XAxisTitle func(childComplexity int) int
+		YAxisTitle func(childComplexity int) int
+	}
+
+	Insight struct {
+		ID   func(childComplexity int) int
+		Text func(childComplexity int) int
+	}
+
 	Mutation struct {
-		CreateAudience func(childComplexity int, input model.NewAudience) int
-		DeleteAudience func(childComplexity int, id string) int
-		UpdateAudience func(childComplexity int, id string, input model.UpdateAudience) int
+		CreateAudience      func(childComplexity int, input model.NewAudience) int
+		CreateChart         func(childComplexity int, input model.NewChart) int
+		CreateInsight       func(childComplexity int, input model.NewInsight) int
+		CreateUserFavourite func(childComplexity int, input model.NewUserFavourite) int
+		DeleteAudience      func(childComplexity int, id string) int
+		DeleteChart         func(childComplexity int, id string) int
+		DeleteInsight       func(childComplexity int, id string) int
+		DeleteUserFavourite func(childComplexity int, id string) int
+		UpdateAudience      func(childComplexity int, id string, input model.UpdateAudience) int
+		UpdateChart         func(childComplexity int, id string, input model.UpdateChart) int
+		UpdateInsight       func(childComplexity int, id string, input model.UpdateInsight) int
+		UpdateUserFavourite func(childComplexity int, id string, input model.UpdateUserFavourite) int
 	}
 
 	Query struct {
-		Audience  func(childComplexity int, id string) int
-		Audiences func(childComplexity int) int
+		Audience             func(childComplexity int, id string) int
+		Audiences            func(childComplexity int) int
+		Chart                func(childComplexity int, id string) int
+		Charts               func(childComplexity int) int
+		Insight              func(childComplexity int, id string) int
+		Insights             func(childComplexity int) int
+		Userfavourite        func(childComplexity int, id string) int
+		Userfavourites       func(childComplexity int) int
+		UserfavouritesByUser func(childComplexity int, userid int) int
+	}
+
+	UserFavourite struct {
+		Assetid func(childComplexity int) int
+		ID      func(childComplexity int) int
+		Type    func(childComplexity int) int
+		Userid  func(childComplexity int) int
 	}
 }
 
 type AudienceResolver interface {
 	ID(ctx context.Context, obj *models.Audience) (string, error)
 }
+type ChartResolver interface {
+	ID(ctx context.Context, obj *models.Chart) (string, error)
+}
+type InsightResolver interface {
+	ID(ctx context.Context, obj *models.Insight) (string, error)
+}
 type MutationResolver interface {
 	CreateAudience(ctx context.Context, input model.NewAudience) (*models.Audience, error)
 	UpdateAudience(ctx context.Context, id string, input model.UpdateAudience) (*models.Audience, error)
 	DeleteAudience(ctx context.Context, id string) (bool, error)
+	CreateChart(ctx context.Context, input model.NewChart) (*models.Chart, error)
+	UpdateChart(ctx context.Context, id string, input model.UpdateChart) (*models.Chart, error)
+	DeleteChart(ctx context.Context, id string) (bool, error)
+	CreateInsight(ctx context.Context, input model.NewInsight) (*models.Insight, error)
+	UpdateInsight(ctx context.Context, id string, input model.UpdateInsight) (*models.Insight, error)
+	DeleteInsight(ctx context.Context, id string) (bool, error)
+	CreateUserFavourite(ctx context.Context, input model.NewUserFavourite) (*models.UserFavourite, error)
+	UpdateUserFavourite(ctx context.Context, id string, input model.UpdateUserFavourite) (*models.UserFavourite, error)
+	DeleteUserFavourite(ctx context.Context, id string) (bool, error)
 }
 type QueryResolver interface {
 	Audiences(ctx context.Context) ([]*models.Audience, error)
 	Audience(ctx context.Context, id string) (*models.Audience, error)
+	Charts(ctx context.Context) ([]*models.Chart, error)
+	Chart(ctx context.Context, id string) (*models.Chart, error)
+	Insights(ctx context.Context) ([]*models.Insight, error)
+	Insight(ctx context.Context, id string) (*models.Insight, error)
+	Userfavourites(ctx context.Context) ([]*models.UserFavourite, error)
+	Userfavourite(ctx context.Context, id string) (*models.UserFavourite, error)
+	UserfavouritesByUser(ctx context.Context, userid int) ([]*models.UserFavourite, error)
+}
+type UserFavouriteResolver interface {
+	ID(ctx context.Context, obj *models.UserFavourite) (string, error)
+	Userid(ctx context.Context, obj *models.UserFavourite) (int, error)
+
+	Assetid(ctx context.Context, obj *models.UserFavourite) (int, error)
 }
 
 type executableSchema struct {
@@ -138,6 +205,44 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Audience.NoOfPurchases(childComplexity), true
 
+	case "Chart.id":
+		if e.complexity.Chart.ID == nil {
+			break
+		}
+
+		return e.complexity.Chart.ID(childComplexity), true
+	case "Chart.title":
+		if e.complexity.Chart.Title == nil {
+			break
+		}
+
+		return e.complexity.Chart.Title(childComplexity), true
+	case "Chart.xaxistitle":
+		if e.complexity.Chart.XAxisTitle == nil {
+			break
+		}
+
+		return e.complexity.Chart.XAxisTitle(childComplexity), true
+	case "Chart.yaxistitle":
+		if e.complexity.Chart.YAxisTitle == nil {
+			break
+		}
+
+		return e.complexity.Chart.YAxisTitle(childComplexity), true
+
+	case "Insight.id":
+		if e.complexity.Insight.ID == nil {
+			break
+		}
+
+		return e.complexity.Insight.ID(childComplexity), true
+	case "Insight.text":
+		if e.complexity.Insight.Text == nil {
+			break
+		}
+
+		return e.complexity.Insight.Text(childComplexity), true
+
 	case "Mutation.createAudience":
 		if e.complexity.Mutation.CreateAudience == nil {
 			break
@@ -149,6 +254,39 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.CreateAudience(childComplexity, args["input"].(model.NewAudience)), true
+	case "Mutation.createChart":
+		if e.complexity.Mutation.CreateChart == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createChart_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateChart(childComplexity, args["input"].(model.NewChart)), true
+	case "Mutation.createInsight":
+		if e.complexity.Mutation.CreateInsight == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createInsight_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateInsight(childComplexity, args["input"].(model.NewInsight)), true
+	case "Mutation.createUserFavourite":
+		if e.complexity.Mutation.CreateUserFavourite == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createUserFavourite_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateUserFavourite(childComplexity, args["input"].(model.NewUserFavourite)), true
 	case "Mutation.deleteAudience":
 		if e.complexity.Mutation.DeleteAudience == nil {
 			break
@@ -160,6 +298,39 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.DeleteAudience(childComplexity, args["id"].(string)), true
+	case "Mutation.deleteChart":
+		if e.complexity.Mutation.DeleteChart == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteChart_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteChart(childComplexity, args["id"].(string)), true
+	case "Mutation.deleteInsight":
+		if e.complexity.Mutation.DeleteInsight == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteInsight_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteInsight(childComplexity, args["id"].(string)), true
+	case "Mutation.deleteUserFavourite":
+		if e.complexity.Mutation.DeleteUserFavourite == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteUserFavourite_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteUserFavourite(childComplexity, args["id"].(string)), true
 	case "Mutation.updateAudience":
 		if e.complexity.Mutation.UpdateAudience == nil {
 			break
@@ -171,6 +342,39 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UpdateAudience(childComplexity, args["id"].(string), args["input"].(model.UpdateAudience)), true
+	case "Mutation.updateChart":
+		if e.complexity.Mutation.UpdateChart == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateChart_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateChart(childComplexity, args["id"].(string), args["input"].(model.UpdateChart)), true
+	case "Mutation.updateInsight":
+		if e.complexity.Mutation.UpdateInsight == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateInsight_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateInsight(childComplexity, args["id"].(string), args["input"].(model.UpdateInsight)), true
+	case "Mutation.updateUserFavourite":
+		if e.complexity.Mutation.UpdateUserFavourite == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateUserFavourite_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateUserFavourite(childComplexity, args["id"].(string), args["input"].(model.UpdateUserFavourite)), true
 
 	case "Query.audience":
 		if e.complexity.Query.Audience == nil {
@@ -189,6 +393,93 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.Audiences(childComplexity), true
+	case "Query.chart":
+		if e.complexity.Query.Chart == nil {
+			break
+		}
+
+		args, err := ec.field_Query_chart_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Chart(childComplexity, args["id"].(string)), true
+	case "Query.charts":
+		if e.complexity.Query.Charts == nil {
+			break
+		}
+
+		return e.complexity.Query.Charts(childComplexity), true
+	case "Query.insight":
+		if e.complexity.Query.Insight == nil {
+			break
+		}
+
+		args, err := ec.field_Query_insight_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Insight(childComplexity, args["id"].(string)), true
+	case "Query.insights":
+		if e.complexity.Query.Insights == nil {
+			break
+		}
+
+		return e.complexity.Query.Insights(childComplexity), true
+	case "Query.userfavourite":
+		if e.complexity.Query.Userfavourite == nil {
+			break
+		}
+
+		args, err := ec.field_Query_userfavourite_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Userfavourite(childComplexity, args["id"].(string)), true
+	case "Query.userfavourites":
+		if e.complexity.Query.Userfavourites == nil {
+			break
+		}
+
+		return e.complexity.Query.Userfavourites(childComplexity), true
+	case "Query.userfavouritesByUser":
+		if e.complexity.Query.UserfavouritesByUser == nil {
+			break
+		}
+
+		args, err := ec.field_Query_userfavouritesByUser_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.UserfavouritesByUser(childComplexity, args["userid"].(int)), true
+
+	case "UserFavourite.assetid":
+		if e.complexity.UserFavourite.Assetid == nil {
+			break
+		}
+
+		return e.complexity.UserFavourite.Assetid(childComplexity), true
+	case "UserFavourite.id":
+		if e.complexity.UserFavourite.ID == nil {
+			break
+		}
+
+		return e.complexity.UserFavourite.ID(childComplexity), true
+	case "UserFavourite.type":
+		if e.complexity.UserFavourite.Type == nil {
+			break
+		}
+
+		return e.complexity.UserFavourite.Type(childComplexity), true
+	case "UserFavourite.userid":
+		if e.complexity.UserFavourite.Userid == nil {
+			break
+		}
+
+		return e.complexity.UserFavourite.Userid(childComplexity), true
 
 	}
 	return 0, false
@@ -199,7 +490,13 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputNewAudience,
+		ec.unmarshalInputNewChart,
+		ec.unmarshalInputNewInsight,
+		ec.unmarshalInputNewUserFavourite,
 		ec.unmarshalInputUpdateAudience,
+		ec.unmarshalInputUpdateChart,
+		ec.unmarshalInputUpdateInsight,
+		ec.unmarshalInputUpdateUserFavourite,
 	)
 	first := true
 
@@ -296,42 +593,22 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
+//go:embed "schemas/audience.graphqls" "schemas/chart.graphqls" "schemas/insight.graphqls" "schemas/userfavourite.graphqls"
+var sourcesFS embed.FS
+
+func sourceData(filename string) string {
+	data, err := sourcesFS.ReadFile(filename)
+	if err != nil {
+		panic(fmt.Sprintf("codegen problem: %s not available", filename))
+	}
+	return string(data)
+}
+
 var sources = []*ast.Source{
-	{Name: "../schemas/schema.graphqls", Input: `type Audience {
-  id: ID!
-  gender: String!
-  birthcountry: String!
-  agegroup: String!
-  dailyhours: Int!
-  noofpurchases: Int!
-}
-
-input NewAudience {
-  gender: String!
-  birthcountry: String!
-  agegroup: String!
-  dailyhours: Int!
-  noofpurchases: Int!
-}
-
-input UpdateAudience {
-  gender: String
-  birthcountry: String
-  agegroup: String
-  dailyhours: Int
-  noofpurchases: Int
-}
-
-type Query {
-  audiences: [Audience!]!
-  audience(id: ID!): Audience
-}
-
-type Mutation {
-  createAudience(input: NewAudience!): Audience!
-  updateAudience(id: ID!, input: UpdateAudience!): Audience!
-  deleteAudience(id: ID!): Boolean!
-}`, BuiltIn: false},
+	{Name: "schemas/audience.graphqls", Input: sourceData("schemas/audience.graphqls"), BuiltIn: false},
+	{Name: "schemas/chart.graphqls", Input: sourceData("schemas/chart.graphqls"), BuiltIn: false},
+	{Name: "schemas/insight.graphqls", Input: sourceData("schemas/insight.graphqls"), BuiltIn: false},
+	{Name: "schemas/userfavourite.graphqls", Input: sourceData("schemas/userfavourite.graphqls"), BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -350,7 +627,73 @@ func (ec *executionContext) field_Mutation_createAudience_args(ctx context.Conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createChart_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNNewChart2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐNewChart)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createInsight_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNNewInsight2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐNewInsight)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createUserFavourite_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNNewUserFavourite2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐNewUserFavourite)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteAudience_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteChart_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteInsight_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteUserFavourite_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
@@ -377,6 +720,54 @@ func (ec *executionContext) field_Mutation_updateAudience_args(ctx context.Conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_updateChart_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateChart2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐUpdateChart)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateInsight_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateInsight2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐUpdateInsight)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateUserFavourite_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateUserFavourite2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐUpdateUserFavourite)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -396,6 +787,50 @@ func (ec *executionContext) field_Query_audience_args(ctx context.Context, rawAr
 		return nil, err
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_chart_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_insight_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_userfavourite_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_userfavouritesByUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userid", ec.unmarshalNInt2int)
+	if err != nil {
+		return nil, err
+	}
+	args["userid"] = arg0
 	return args, nil
 }
 
@@ -625,6 +1060,180 @@ func (ec *executionContext) fieldContext_Audience_noofpurchases(_ context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Chart_id(ctx context.Context, field graphql.CollectedField, obj *models.Chart) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Chart_id,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Chart().ID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Chart_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Chart",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Chart_title(ctx context.Context, field graphql.CollectedField, obj *models.Chart) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Chart_title,
+		func(ctx context.Context) (any, error) {
+			return obj.Title, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Chart_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Chart",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Chart_xaxistitle(ctx context.Context, field graphql.CollectedField, obj *models.Chart) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Chart_xaxistitle,
+		func(ctx context.Context) (any, error) {
+			return obj.XAxisTitle, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Chart_xaxistitle(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Chart",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Chart_yaxistitle(ctx context.Context, field graphql.CollectedField, obj *models.Chart) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Chart_yaxistitle,
+		func(ctx context.Context) (any, error) {
+			return obj.YAxisTitle, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Chart_yaxistitle(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Chart",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Insight_id(ctx context.Context, field graphql.CollectedField, obj *models.Insight) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Insight_id,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Insight().ID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Insight_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Insight",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Insight_text(ctx context.Context, field graphql.CollectedField, obj *models.Insight) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Insight_text,
+		func(ctx context.Context) (any, error) {
+			return obj.Text, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Insight_text(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Insight",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createAudience(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -776,6 +1385,427 @@ func (ec *executionContext) fieldContext_Mutation_deleteAudience(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createChart(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createChart,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().CreateChart(ctx, fc.Args["input"].(model.NewChart))
+		},
+		nil,
+		ec.marshalNChart2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐChart,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createChart(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Chart_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Chart_title(ctx, field)
+			case "xaxistitle":
+				return ec.fieldContext_Chart_xaxistitle(ctx, field)
+			case "yaxistitle":
+				return ec.fieldContext_Chart_yaxistitle(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Chart", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createChart_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateChart(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateChart,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpdateChart(ctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateChart))
+		},
+		nil,
+		ec.marshalNChart2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐChart,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateChart(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Chart_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Chart_title(ctx, field)
+			case "xaxistitle":
+				return ec.fieldContext_Chart_xaxistitle(ctx, field)
+			case "yaxistitle":
+				return ec.fieldContext_Chart_yaxistitle(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Chart", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateChart_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteChart(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_deleteChart,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().DeleteChart(ctx, fc.Args["id"].(string))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteChart(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteChart_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createInsight(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createInsight,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().CreateInsight(ctx, fc.Args["input"].(model.NewInsight))
+		},
+		nil,
+		ec.marshalNInsight2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐInsight,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createInsight(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Insight_id(ctx, field)
+			case "text":
+				return ec.fieldContext_Insight_text(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Insight", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createInsight_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateInsight(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateInsight,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpdateInsight(ctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateInsight))
+		},
+		nil,
+		ec.marshalNInsight2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐInsight,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateInsight(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Insight_id(ctx, field)
+			case "text":
+				return ec.fieldContext_Insight_text(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Insight", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateInsight_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteInsight(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_deleteInsight,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().DeleteInsight(ctx, fc.Args["id"].(string))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteInsight(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteInsight_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createUserFavourite(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createUserFavourite,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().CreateUserFavourite(ctx, fc.Args["input"].(model.NewUserFavourite))
+		},
+		nil,
+		ec.marshalNUserFavourite2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserFavourite,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createUserFavourite(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserFavourite_id(ctx, field)
+			case "userid":
+				return ec.fieldContext_UserFavourite_userid(ctx, field)
+			case "type":
+				return ec.fieldContext_UserFavourite_type(ctx, field)
+			case "assetid":
+				return ec.fieldContext_UserFavourite_assetid(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserFavourite", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createUserFavourite_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateUserFavourite(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateUserFavourite,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpdateUserFavourite(ctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateUserFavourite))
+		},
+		nil,
+		ec.marshalNUserFavourite2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserFavourite,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateUserFavourite(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserFavourite_id(ctx, field)
+			case "userid":
+				return ec.fieldContext_UserFavourite_userid(ctx, field)
+			case "type":
+				return ec.fieldContext_UserFavourite_type(ctx, field)
+			case "assetid":
+				return ec.fieldContext_UserFavourite_assetid(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserFavourite", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateUserFavourite_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteUserFavourite(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_deleteUserFavourite,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().DeleteUserFavourite(ctx, fc.Args["id"].(string))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteUserFavourite(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteUserFavourite_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_audiences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -868,6 +1898,319 @@ func (ec *executionContext) fieldContext_Query_audience(ctx context.Context, fie
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_audience_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_charts(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_charts,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().Charts(ctx)
+		},
+		nil,
+		ec.marshalNChart2ᚕᚖplatformᚑgoᚑchallengeᚋmodelsᚐChartᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_charts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Chart_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Chart_title(ctx, field)
+			case "xaxistitle":
+				return ec.fieldContext_Chart_xaxistitle(ctx, field)
+			case "yaxistitle":
+				return ec.fieldContext_Chart_yaxistitle(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Chart", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_chart(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_chart,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().Chart(ctx, fc.Args["id"].(string))
+		},
+		nil,
+		ec.marshalOChart2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐChart,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_chart(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Chart_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Chart_title(ctx, field)
+			case "xaxistitle":
+				return ec.fieldContext_Chart_xaxistitle(ctx, field)
+			case "yaxistitle":
+				return ec.fieldContext_Chart_yaxistitle(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Chart", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_chart_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_insights(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_insights,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().Insights(ctx)
+		},
+		nil,
+		ec.marshalNInsight2ᚕᚖplatformᚑgoᚑchallengeᚋmodelsᚐInsightᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_insights(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Insight_id(ctx, field)
+			case "text":
+				return ec.fieldContext_Insight_text(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Insight", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_insight(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_insight,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().Insight(ctx, fc.Args["id"].(string))
+		},
+		nil,
+		ec.marshalOInsight2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐInsight,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_insight(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Insight_id(ctx, field)
+			case "text":
+				return ec.fieldContext_Insight_text(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Insight", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_insight_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_userfavourites(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_userfavourites,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().Userfavourites(ctx)
+		},
+		nil,
+		ec.marshalNUserFavourite2ᚕᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserFavouriteᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_userfavourites(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserFavourite_id(ctx, field)
+			case "userid":
+				return ec.fieldContext_UserFavourite_userid(ctx, field)
+			case "type":
+				return ec.fieldContext_UserFavourite_type(ctx, field)
+			case "assetid":
+				return ec.fieldContext_UserFavourite_assetid(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserFavourite", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_userfavourite(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_userfavourite,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().Userfavourite(ctx, fc.Args["id"].(string))
+		},
+		nil,
+		ec.marshalOUserFavourite2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserFavourite,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_userfavourite(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserFavourite_id(ctx, field)
+			case "userid":
+				return ec.fieldContext_UserFavourite_userid(ctx, field)
+			case "type":
+				return ec.fieldContext_UserFavourite_type(ctx, field)
+			case "assetid":
+				return ec.fieldContext_UserFavourite_assetid(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserFavourite", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_userfavourite_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_userfavouritesByUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_userfavouritesByUser,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().UserfavouritesByUser(ctx, fc.Args["userid"].(int))
+		},
+		nil,
+		ec.marshalNUserFavourite2ᚕᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserFavouriteᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_userfavouritesByUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserFavourite_id(ctx, field)
+			case "userid":
+				return ec.fieldContext_UserFavourite_userid(ctx, field)
+			case "type":
+				return ec.fieldContext_UserFavourite_type(ctx, field)
+			case "assetid":
+				return ec.fieldContext_UserFavourite_assetid(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserFavourite", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_userfavouritesByUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -977,6 +2320,122 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 				return ec.fieldContext___Schema_directives(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserFavourite_id(ctx context.Context, field graphql.CollectedField, obj *models.UserFavourite) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserFavourite_id,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.UserFavourite().ID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserFavourite_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserFavourite",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserFavourite_userid(ctx context.Context, field graphql.CollectedField, obj *models.UserFavourite) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserFavourite_userid,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.UserFavourite().Userid(ctx, obj)
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserFavourite_userid(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserFavourite",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserFavourite_type(ctx context.Context, field graphql.CollectedField, obj *models.UserFavourite) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserFavourite_type,
+		func(ctx context.Context) (any, error) {
+			return obj.Type, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserFavourite_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserFavourite",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserFavourite_assetid(ctx context.Context, field graphql.CollectedField, obj *models.UserFavourite) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserFavourite_assetid,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.UserFavourite().Assetid(ctx, obj)
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserFavourite_assetid(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserFavourite",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -2483,6 +3942,115 @@ func (ec *executionContext) unmarshalInputNewAudience(ctx context.Context, obj a
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputNewChart(ctx context.Context, obj any) (model.NewChart, error) {
+	var it model.NewChart
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"title", "xaxistitle", "yaxistitle"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "title":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Title = data
+		case "xaxistitle":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("xaxistitle"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Xaxistitle = data
+		case "yaxistitle":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("yaxistitle"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Yaxistitle = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputNewInsight(ctx context.Context, obj any) (model.NewInsight, error) {
+	var it model.NewInsight
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"text"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "text":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("text"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Text = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputNewUserFavourite(ctx context.Context, obj any) (model.NewUserFavourite, error) {
+	var it model.NewUserFavourite
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"userid", "type", "assetid"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "userid":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userid"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Userid = data
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		case "assetid":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("assetid"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Assetid = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateAudience(ctx context.Context, obj any) (model.UpdateAudience, error) {
 	var it model.UpdateAudience
 	asMap := map[string]any{}
@@ -2532,6 +4100,115 @@ func (ec *executionContext) unmarshalInputUpdateAudience(ctx context.Context, ob
 				return it, err
 			}
 			it.Noofpurchases = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateChart(ctx context.Context, obj any) (model.UpdateChart, error) {
+	var it model.UpdateChart
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"title", "xaxistitle", "yaxistitle"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "title":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Title = data
+		case "xaxistitle":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("xaxistitle"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Xaxistitle = data
+		case "yaxistitle":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("yaxistitle"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Yaxistitle = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateInsight(ctx context.Context, obj any) (model.UpdateInsight, error) {
+	var it model.UpdateInsight
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"text"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "text":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("text"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Text = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateUserFavourite(ctx context.Context, obj any) (model.UpdateUserFavourite, error) {
+	var it model.UpdateUserFavourite
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"userid", "type", "assetid"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "userid":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userid"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Userid = data
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		case "assetid":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("assetid"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Assetid = data
 		}
 	}
 
@@ -2641,6 +4318,166 @@ func (ec *executionContext) _Audience(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var chartImplementors = []string{"Chart"}
+
+func (ec *executionContext) _Chart(ctx context.Context, sel ast.SelectionSet, obj *models.Chart) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, chartImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Chart")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Chart_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "title":
+			out.Values[i] = ec._Chart_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "xaxistitle":
+			out.Values[i] = ec._Chart_xaxistitle(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "yaxistitle":
+			out.Values[i] = ec._Chart_yaxistitle(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var insightImplementors = []string{"Insight"}
+
+func (ec *executionContext) _Insight(ctx context.Context, sel ast.SelectionSet, obj *models.Insight) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, insightImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Insight")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Insight_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "text":
+			out.Values[i] = ec._Insight_text(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -2677,6 +4514,69 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "deleteAudience":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteAudience(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createChart":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createChart(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateChart":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateChart(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteChart":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteChart(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createInsight":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createInsight(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateInsight":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateInsight(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteInsight":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteInsight(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createUserFavourite":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createUserFavourite(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateUserFavourite":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateUserFavourite(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteUserFavourite":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteUserFavourite(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -2764,6 +4664,151 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "charts":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_charts(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "chart":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_chart(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "insights":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_insights(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "insight":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_insight(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "userfavourites":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_userfavourites(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "userfavourite":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_userfavourite(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "userfavouritesByUser":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_userfavouritesByUser(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -2772,6 +4817,153 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___schema(ctx, field)
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var userFavouriteImplementors = []string{"UserFavourite"}
+
+func (ec *executionContext) _UserFavourite(ctx context.Context, sel ast.SelectionSet, obj *models.UserFavourite) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userFavouriteImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserFavourite")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UserFavourite_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "userid":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UserFavourite_userid(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "type":
+			out.Values[i] = ec._UserFavourite_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "assetid":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UserFavourite_assetid(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3204,6 +5396,64 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) marshalNChart2platformᚑgoᚑchallengeᚋmodelsᚐChart(ctx context.Context, sel ast.SelectionSet, v models.Chart) graphql.Marshaler {
+	return ec._Chart(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNChart2ᚕᚖplatformᚑgoᚑchallengeᚋmodelsᚐChartᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Chart) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNChart2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐChart(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNChart2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐChart(ctx context.Context, sel ast.SelectionSet, v *models.Chart) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Chart(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3218,6 +5468,64 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNInsight2platformᚑgoᚑchallengeᚋmodelsᚐInsight(ctx context.Context, sel ast.SelectionSet, v models.Insight) graphql.Marshaler {
+	return ec._Insight(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNInsight2ᚕᚖplatformᚑgoᚑchallengeᚋmodelsᚐInsightᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Insight) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNInsight2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐInsight(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNInsight2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐInsight(ctx context.Context, sel ast.SelectionSet, v *models.Insight) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Insight(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v any) (int, error) {
@@ -3241,6 +5549,21 @@ func (ec *executionContext) unmarshalNNewAudience2platformᚑgoᚑchallengeᚋgr
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNNewChart2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐNewChart(ctx context.Context, v any) (model.NewChart, error) {
+	res, err := ec.unmarshalInputNewChart(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNNewInsight2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐNewInsight(ctx context.Context, v any) (model.NewInsight, error) {
+	res, err := ec.unmarshalInputNewInsight(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNNewUserFavourite2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐNewUserFavourite(ctx context.Context, v any) (model.NewUserFavourite, error) {
+	res, err := ec.unmarshalInputNewUserFavourite(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3260,6 +5583,79 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 func (ec *executionContext) unmarshalNUpdateAudience2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐUpdateAudience(ctx context.Context, v any) (model.UpdateAudience, error) {
 	res, err := ec.unmarshalInputUpdateAudience(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateChart2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐUpdateChart(ctx context.Context, v any) (model.UpdateChart, error) {
+	res, err := ec.unmarshalInputUpdateChart(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateInsight2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐUpdateInsight(ctx context.Context, v any) (model.UpdateInsight, error) {
+	res, err := ec.unmarshalInputUpdateInsight(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateUserFavourite2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐUpdateUserFavourite(ctx context.Context, v any) (model.UpdateUserFavourite, error) {
+	res, err := ec.unmarshalInputUpdateUserFavourite(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUserFavourite2platformᚑgoᚑchallengeᚋmodelsᚐUserFavourite(ctx context.Context, sel ast.SelectionSet, v models.UserFavourite) graphql.Marshaler {
+	return ec._UserFavourite(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUserFavourite2ᚕᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserFavouriteᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.UserFavourite) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUserFavourite2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserFavourite(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNUserFavourite2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserFavourite(ctx context.Context, sel ast.SelectionSet, v *models.UserFavourite) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UserFavourite(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -3552,6 +5948,20 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
+func (ec *executionContext) marshalOChart2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐChart(ctx context.Context, sel ast.SelectionSet, v *models.Chart) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Chart(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOInsight2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐInsight(ctx context.Context, sel ast.SelectionSet, v *models.Insight) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Insight(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v any) (*int, error) {
 	if v == nil {
 		return nil, nil
@@ -3586,6 +5996,13 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	_ = ctx
 	res := graphql.MarshalString(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOUserFavourite2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserFavourite(ctx context.Context, sel ast.SelectionSet, v *models.UserFavourite) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._UserFavourite(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

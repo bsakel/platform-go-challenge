@@ -1,6 +1,6 @@
 # Where are all the schema files located? globs are supported eg  src/**/*.graphqls
 schema:
-  - schemas/*.graphqls
+  - graph/schemas/*.graphqls
 
 # Where should the generated server code go?
 exec:
@@ -15,8 +15,8 @@ model:
 # Where should the resolver implementations go?
 resolver:
   layout: follow-schema
-  dir: graph
-  package: graph
+  dir: graph/resolvers
+  package: resolvers
   filename_template: "{name}.resolvers.go"
 
 # Optional: turn on to not generate the gqlgen schema
@@ -46,3 +46,12 @@ models:
   Audience:
     model:
       - platform-go-challenge/models.Audience
+  Chart:
+    model:
+      - platform-go-challenge/models.Chart
+  Insight:
+    model:
+      - platform-go-challenge/models.Insight
+  UserFavourite:
+    model:
+      - platform-go-challenge/models.UserFavourite

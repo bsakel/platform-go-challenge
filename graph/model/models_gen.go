@@ -13,6 +13,22 @@ type NewAudience struct {
 	Noofpurchases int    `json:"noofpurchases"`
 }
 
+type NewChart struct {
+	Title      string `json:"title"`
+	Xaxistitle string `json:"xaxistitle"`
+	Yaxistitle string `json:"yaxistitle"`
+}
+
+type NewInsight struct {
+	Text string `json:"text"`
+}
+
+type NewUserFavourite struct {
+	Userid  int    `json:"userid"`
+	Type    string `json:"type"`
+	Assetid int    `json:"assetid"`
+}
+
 type Query struct {
 }
 
@@ -22,4 +38,20 @@ type UpdateAudience struct {
 	Agegroup      *string `json:"agegroup,omitempty"`
 	Dailyhours    *int    `json:"dailyhours,omitempty"`
 	Noofpurchases *int    `json:"noofpurchases,omitempty"`
+}
+
+type UpdateChart struct {
+	Title      *string `json:"title,omitempty"`
+	Xaxistitle *string `json:"xaxistitle,omitempty"`
+	Yaxistitle *string `json:"yaxistitle,omitempty"`
+}
+
+type UpdateInsight struct {
+	Text *string `json:"text,omitempty"`
+}
+
+type UpdateUserFavourite struct {
+	Userid  *int    `json:"userid,omitempty"`
+	Type    *string `json:"type,omitempty"`
+	Assetid *int    `json:"assetid,omitempty"`
 }

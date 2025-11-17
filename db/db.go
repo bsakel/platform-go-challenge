@@ -34,7 +34,12 @@ func InitDB() {
 	}
 
 	// migrate the schema
-	if err := GormDB.AutoMigrate(&models.Audience{}); err != nil {
+	if err := GormDB.AutoMigrate(
+		&models.Audience{},
+		&models.Chart{},
+		&models.Insight{},
+		&models.UserFavourite{},
+	); err != nil {
 		log.Fatal("Failed to migrate schema:", err)
 	}
 
