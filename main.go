@@ -62,7 +62,6 @@ func main() {
 	router.POST("/userfavourite", api.CreateUserFavourite)
 	router.GET("/userfavourites", api.GetUserFavourites)
 	router.GET("/userfavourite/:id", api.GetUserFavourite)
-	router.GET("/userfavourites/user/:userid", api.GetUserFavouritesByUser)
 	router.PUT("/userfavourite/:id", api.UpdateUserFavourite)
 	router.DELETE("/userfavourite/:id", api.DeleteUserFavourite)
 

@@ -37,3 +37,44 @@ So because I am not really conlfident that I can build anything in GO, I will do
 
 1)  
 
+
+`
+query {
+  audience (id: 1){
+    gender,
+    birthcountry,
+    agegroup,
+    dailyhours,
+    noofpurchases
+
+  }
+}
+
+query {
+  audiences {
+    id,    
+    gender,
+    birthcountry,
+    agegroup,
+    dailyhours,
+    noofpurchases
+
+  }
+}
+
+mutation {
+  createAudience(input: {
+    gender: "male",
+    birthcountry: "Greece",
+    agegroup: "25-30",
+    dailyhours: 5,
+    noofpurchases: 0
+  }){
+    gender,
+    birthcountry,
+    agegroup,
+    dailyhours,
+    noofpurchases
+  }
+}
+

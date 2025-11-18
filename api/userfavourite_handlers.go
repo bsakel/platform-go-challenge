@@ -3,7 +3,6 @@ package api
 import (
 	"log"
 	"net/http"
-	"strconv"
 
 	"platform-go-challenge/api/model"
 	"platform-go-challenge/db"
@@ -45,25 +44,6 @@ func GetUserFavourite(c *gin.Context) {
 		return
 	}
 	model.ResponseJSON(c, http.StatusOK, "UserFavourite retrieved successfully", userfavourite)
-}
-
-func GetUserFavouritesByUser(c *gin.Context) {
-	if db.GormDB == nil {
-		log.Fatal("DB pointer is nil")
-	}
-
-	userID, err := strconv.Atoi(c.Param("userid"))
-	if err != nil {
-		model.ResponseJSON(c, http.StatusBadRequest, "Invalid user ID", nil)
-		return
-	}
-
-	var userfavourites []models.UserFavourite
-	if err := db.GormDB.Where("user_id = ?", userID).Find(&userfavourites).Error; err != nil {
-		model.ResponseJSON(c, http.StatusNotFound, "UserFavourites not found", nil)
-		return
-	}
-	model.ResponseJSON(c, http.StatusOK, "UserFavourites retrieved successfully", userfavourites)
 }
 
 func UpdateUserFavourite(c *gin.Context) {

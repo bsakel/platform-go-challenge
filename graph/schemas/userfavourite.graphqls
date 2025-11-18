@@ -20,7 +20,6 @@ input UpdateUserFavourite {
 extend type Query {
   userfavourites: [UserFavourite!]!
   userfavourite(id: ID!): UserFavourite
-  userfavouritesByUser(userid: Int!): [UserFavourite!]!
 }
 
 extend type Mutation {
