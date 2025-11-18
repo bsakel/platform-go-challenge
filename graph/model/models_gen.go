@@ -2,6 +2,10 @@
 
 package model
 
+import (
+	"platform-go-challenge/models"
+)
+
 type Mutation struct {
 }
 
@@ -54,4 +58,11 @@ type UpdateUserFavourite struct {
 	Userid  *int    `json:"userid,omitempty"`
 	Type    *string `json:"type,omitempty"`
 	Assetid *int    `json:"assetid,omitempty"`
+}
+
+type UserInterface struct {
+	Userid   int                `json:"userid"`
+	Audience []*models.Audience `json:"audience"`
+	Chart    []*models.Chart    `json:"chart"`
+	Insight  []*models.Insight  `json:"insight"`
 }

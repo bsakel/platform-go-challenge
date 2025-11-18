@@ -1,0 +1,10 @@
+type UserInterface {
+  userid: Int!
+  audience: [Audience!]!
+  chart: [Chart!]!
+  insight: [Insight!]!
+}
+
+extend type Query {
+  userinterface(userID: ID!): UserInterface
+}

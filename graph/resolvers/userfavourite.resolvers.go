@@ -78,15 +78,6 @@ func (r *queryResolver) Userfavourite(ctx context.Context, id string) (*models.U
 	return &userfavourite, nil
 }
 
-// UserfavouritesByUser is the resolver for the userfavouritesByUser field.
-func (r *queryResolver) UserfavouritesByUser(ctx context.Context, userid int) ([]*models.UserFavourite, error) {
-	var userfavourites []*models.UserFavourite
-	if err := r.DB.Where("user_id = ?", userid).Find(&userfavourites).Error; err != nil {
-		return nil, err
-	}
-	return userfavourites, nil
-}
-
 // ID is the resolver for the id field.
 func (r *userFavouriteResolver) ID(ctx context.Context, obj *models.UserFavourite) (string, error) {
 	return fmt.Sprintf("%d", obj.ID), nil

@@ -70,6 +70,7 @@ mutation {
     dailyhours: 5,
     noofpurchases: 0
   }){
+    id,
     gender,
     birthcountry,
     agegroup,
@@ -78,3 +79,59 @@ mutation {
   }
 }
 
+mutation {
+  createChart(input: {
+    title: "test 1",
+    xaxistitle: "x axis",
+    yaxistitle: "y axis"
+  }){
+    id,
+    title,
+    xaxistitle,
+    yaxistitle
+  }
+}
+
+mutation {
+  createInsight(input: {
+    text: "test"
+  }){
+    id,
+    text
+  }
+}
+
+mutation {
+  createUserFavourite(input: {
+    userid: 1,
+    type: "Insight",
+    assetid: 1
+  }){
+    userid,
+    type,
+    assetid
+  }
+}
+
+query {
+  userinterface (userID: 1){
+    audience{
+      id,
+      gender,
+      birthcountry,
+      agegroup,
+      dailyhours,
+      noofpurchases
+    }
+    chart{
+      id,
+      title,
+      xaxistitle,
+      yaxistitle
+    }
+    insight{
+      id,
+      text
+    }
+  }
+}
