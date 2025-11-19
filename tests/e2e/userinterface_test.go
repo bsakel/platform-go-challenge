@@ -1,0 +1,353 @@
+package e2e
+
+import (
+	"encoding/json"
+	"platform-go-challenge/models"
+	"testing"
+)
+
+// GraphQL response types (IDs are strings in GraphQL)
+type gqlAudience struct {
+	ID            string `json:"id"`
+	Gender        string `json:"gender"`
+	Birthcountry  string `json:"birthcountry"`
+	Agegroup      string `json:"agegroup"`
+	Dailyhours    int    `json:"dailyhours"`
+	Noofpurchases int    `json:"noofpurchases"`
+}
+
+type gqlChart struct {
+	ID         string `json:"id"`
+	Title      string `json:"title"`
+	Xaxistitle string `json:"xaxistitle"`
+	Yaxistitle string `json:"yaxistitle"`
+}
+
+type gqlInsight struct {
+	ID   string `json:"id"`
+	Text string `json:"text"`
+}
+
+// TestUserInterface_EmptyFavourites tests when user has no favourites
+func TestUserInterface_EmptyFavourites(t *testing.T) {
+	CleanupTestData(testDB)
+
+	query := `
+		query GetUserInterface($userID: ID!) {
+			userinterface(userID: $userID) {
+				userid
+				audience {
+					id
+					gender
+				}
+				chart {
+					id
+					title
+				}
+				insight {
+					id
+					text
+				}
+			}
+		}
+	`
+
+	variables := map[string]interface{}{
+		"userID": "999",
+	}
+
+	resp := ExecuteGraphQL(t, query, variables)
+
+	if len(resp.Errors) > 0 {
+		t.Fatalf("expected no errors, got: %v", resp.Errors)
+	}
+
+	var result struct {
+		Userinterface struct {
+			Userid   int           `json:"userid"`
+			Audience []gqlAudience `json:"audience"`
+			Chart    []gqlChart    `json:"chart"`
+			Insight  []gqlInsight  `json:"insight"`
+		} `json:"userinterface"`
+	}
+
+	if err := json.Unmarshal(resp.Data, &result); err != nil {
+		t.Fatalf("failed to unmarshal response: %v", err)
+	}
+
+	if result.Userinterface.Userid != 999 {
+		t.Errorf("expected userid 999, got %d", result.Userinterface.Userid)
+	}
+
+	if len(result.Userinterface.Audience) != 0 {
+		t.Errorf("expected 0 audiences, got %d", len(result.Userinterface.Audience))
+	}
+
+	if len(result.Userinterface.Chart) != 0 {
+		t.Errorf("expected 0 charts, got %d", len(result.Userinterface.Chart))
+	}
+
+	if len(result.Userinterface.Insight) != 0 {
+		t.Errorf("expected 0 insights, got %d", len(result.Userinterface.Insight))
+	}
+}
+
+// TestUserInterface_WithFavourites tests fetching user favourites with all asset types
+func TestUserInterface_WithFavourites(t *testing.T) {
+	CleanupTestData(testDB)
+
+	// Seed test data
+	audienceID, chartID, insightID := SeedTestData(t, testDB)
+
+	// Create favourites for user 1
+	favourites := []models.UserFavourite{
+		{UserID: 1, Type: "Audience", AssetID: audienceID},
+		{UserID: 1, Type: "Chart", AssetID: chartID},
+		{UserID: 1, Type: "Insight", AssetID: insightID},
+	}
+
+	for _, fav := range favourites {
+		if err := testDB.Create(&fav).Error; err != nil {
+			t.Fatalf("failed to create favourite: %v", err)
+		}
+	}
+
+	query := `
+		query GetUserInterface($userID: ID!) {
+			userinterface(userID: $userID) {
+				userid
+				audience {
+					id
+					gender
+					birthcountry
+					agegroup
+					dailyhours
+					noofpurchases
+				}
+				chart {
+					id
+					title
+					xaxistitle
+					yaxistitle
+				}
+				insight {
+					id
+					text
+				}
+			}
+		}
+	`
+
+	variables := map[string]interface{}{
+		"userID": "1",
+	}
+
+	resp := ExecuteGraphQL(t, query, variables)
+
+	if len(resp.Errors) > 0 {
+		t.Fatalf("expected no errors, got: %v", resp.Errors)
+	}
+
+	var result struct {
+		Userinterface struct {
+			Userid   int           `json:"userid"`
+			Audience []gqlAudience `json:"audience"`
+			Chart    []gqlChart    `json:"chart"`
+			Insight  []gqlInsight  `json:"insight"`
+		} `json:"userinterface"`
+	}
+
+	if err := json.Unmarshal(resp.Data, &result); err != nil {
+		t.Fatalf("failed to unmarshal response: %v", err)
+	}
+
+	// Verify user ID
+	if result.Userinterface.Userid != 1 {
+		t.Errorf("expected userid 1, got %d", result.Userinterface.Userid)
+	}
+
+	// Verify audiences
+	if len(result.Userinterface.Audience) != 1 {
+		t.Fatalf("expected 1 audience, got %d", len(result.Userinterface.Audience))
+	}
+	if result.Userinterface.Audience[0].Gender != "Male" {
+		t.Errorf("expected gender 'Male', got '%s'", result.Userinterface.Audience[0].Gender)
+	}
+	if result.Userinterface.Audience[0].Birthcountry != "USA" {
+		t.Errorf("expected birthcountry 'USA', got '%s'", result.Userinterface.Audience[0].Birthcountry)
+	}
+
+	// Verify charts
+	if len(result.Userinterface.Chart) != 1 {
+		t.Fatalf("expected 1 chart, got %d", len(result.Userinterface.Chart))
+	}
+	if result.Userinterface.Chart[0].Title != "Sales Chart" {
+		t.Errorf("expected title 'Sales Chart', got '%s'", result.Userinterface.Chart[0].Title)
+	}
+
+	// Verify insights
+	if len(result.Userinterface.Insight) != 1 {
+		t.Fatalf("expected 1 insight, got %d", len(result.Userinterface.Insight))
+	}
+	if result.Userinterface.Insight[0].Text != "Revenue increased by 20% this quarter" {
+		t.Errorf("expected specific insight text, got '%s'", result.Userinterface.Insight[0].Text)
+	}
+}
+
+// TestUserInterface_MultipleFavouritesOfSameType tests multiple favourites of the same type
+func TestUserInterface_MultipleFavouritesOfSameType(t *testing.T) {
+	CleanupTestData(testDB)
+
+	// Create multiple audiences
+	audience1 := models.Audience{
+		Gender:        "Male",
+		BirthCountry:  "USA",
+		AgeGroup:      "25-34",
+		DailyHours:    5,
+		NoOfPurchases: 10,
+	}
+	testDB.Create(&audience1)
+
+	audience2 := models.Audience{
+		Gender:        "Female",
+		BirthCountry:  "Canada",
+		AgeGroup:      "35-44",
+		DailyHours:    3,
+		NoOfPurchases: 7,
+	}
+	testDB.Create(&audience2)
+
+	// Create favourites
+	testDB.Create(&models.UserFavourite{UserID: 2, Type: "Audience", AssetID: audience1.ID})
+	testDB.Create(&models.UserFavourite{UserID: 2, Type: "Audience", AssetID: audience2.ID})
+
+	query := `
+		query GetUserInterface($userID: ID!) {
+			userinterface(userID: $userID) {
+				userid
+				audience {
+					id
+					gender
+					birthcountry
+				}
+			}
+		}
+	`
+
+	variables := map[string]interface{}{
+		"userID": "2",
+	}
+
+	resp := ExecuteGraphQL(t, query, variables)
+
+	if len(resp.Errors) > 0 {
+		t.Fatalf("expected no errors, got: %v", resp.Errors)
+	}
+
+	var result struct {
+		Userinterface struct {
+			Userid   int           `json:"userid"`
+			Audience []gqlAudience `json:"audience"`
+		} `json:"userinterface"`
+	}
+
+	if err := json.Unmarshal(resp.Data, &result); err != nil {
+		t.Fatalf("failed to unmarshal response: %v", err)
+	}
+
+	if len(result.Userinterface.Audience) != 2 {
+		t.Fatalf("expected 2 audiences, got %d", len(result.Userinterface.Audience))
+	}
+
+	// Verify both audiences are returned
+	genders := make(map[string]bool)
+	for _, aud := range result.Userinterface.Audience {
+		genders[aud.Gender] = true
+	}
+
+	if !genders["Male"] || !genders["Female"] {
+		t.Errorf("expected both Male and Female audiences")
+	}
+}
+
+// TestUserInterface_OnlySpecificUser tests that only the requested user's favourites are returned
+func TestUserInterface_OnlySpecificUser(t *testing.T) {
+	CleanupTestData(testDB)
+
+	// Create test data
+	audienceID, chartID, _ := SeedTestData(t, testDB)
+
+	// Create favourites for user 1
+	testDB.Create(&models.UserFavourite{UserID: 1, Type: "Audience", AssetID: audienceID})
+
+	// Create favourites for user 2
+	testDB.Create(&models.UserFavourite{UserID: 2, Type: "Chart", AssetID: chartID})
+
+	query := `
+		query GetUserInterface($userID: ID!) {
+			userinterface(userID: $userID) {
+				userid
+				audience { id }
+				chart { id }
+			}
+		}
+	`
+
+	// Query for user 1
+	variables := map[string]interface{}{
+		"userID": "1",
+	}
+
+	resp := ExecuteGraphQL(t, query, variables)
+
+	if len(resp.Errors) > 0 {
+		t.Fatalf("expected no errors, got: %v", resp.Errors)
+	}
+
+	var result struct {
+		Userinterface struct {
+			Userid   int           `json:"userid"`
+			Audience []gqlAudience `json:"audience"`
+			Chart    []gqlChart    `json:"chart"`
+		} `json:"userinterface"`
+	}
+
+	if err := json.Unmarshal(resp.Data, &result); err != nil {
+		t.Fatalf("failed to unmarshal response: %v", err)
+	}
+
+	// User 1 should have 1 audience and 0 charts
+	if len(result.Userinterface.Audience) != 1 {
+		t.Errorf("expected 1 audience for user 1, got %d", len(result.Userinterface.Audience))
+	}
+
+	if len(result.Userinterface.Chart) != 0 {
+		t.Errorf("expected 0 charts for user 1, got %d", len(result.Userinterface.Chart))
+	}
+}
+
+// TestUserInterface_InvalidUserID tests error handling for invalid user ID
+func TestUserInterface_InvalidUserID(t *testing.T) {
+	query := `
+		query GetUserInterface($userID: ID!) {
+			userinterface(userID: $userID) {
+				userid
+			}
+		}
+	`
+
+	variables := map[string]interface{}{
+		"userID": "invalid",
+	}
+
+	resp := ExecuteGraphQL(t, query, variables)
+
+	// Should have an error for invalid user ID
+	if len(resp.Errors) == 0 {
+		t.Fatalf("expected error for invalid user ID, got none")
+	}
+
+	if resp.Errors[0].Message == "" {
+		t.Errorf("expected error message, got empty string")
+	}
+}
