@@ -10,7 +10,7 @@ platform-go-challenge/
 │   ├── handlers.go              # Audience handlers
 │   ├── chart_handlers.go        # Chart handlers
 │   ├── insight_handlers.go      # Insight handlers
-│   ├── userfavourite_handlers.go # UserFavourite handlers
+│   ├── userstar_handlers.go # UserStar handlers
 │   └── model/                   # API response models
 │
 ├── db/                          # Database configuration
@@ -26,18 +26,18 @@ platform-go-challenge/
 │   │   ├── audience.resolvers.go
 │   │   ├── chart.resolvers.go
 │   │   ├── insight.resolvers.go
-│   │   └── userfavourite.resolvers.go
+│   │   └── userstar.resolvers.go
 │   └── schemas/                # GraphQL schema definitions
 │       ├── audience.graphqls
 │       ├── chart.graphqls
 │       ├── insight.graphqls
-│       └── userfavourite.graphqls
+│       └── userstar.graphqls
 │
 ├── models/                      # Domain models
 │   ├── audience.go
 │   ├── chart.go
 │   ├── insight.go
-│   ├── userfavourites.go
+│   ├── userstars.go
 │   └── jsonResponse.go
 │
 ├── main.go                      # Application entry point

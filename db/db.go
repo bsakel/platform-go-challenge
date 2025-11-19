@@ -38,7 +38,7 @@ func InitDB() {
 		&models.Audience{},
 		&models.Chart{},
 		&models.Insight{},
-		&models.UserFavourite{},
+		&models.UserStar{},
 	); err != nil {
 		log.Fatal("Failed to migrate schema:", err)
 	}

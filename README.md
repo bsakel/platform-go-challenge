@@ -102,7 +102,7 @@ mutation {
 }
 
 mutation {
-  createUserFavourite(input: {
+  createUserStar(input: {
     userid: 1,
     type: "Insight",
     assetid: 1

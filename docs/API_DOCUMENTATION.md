@@ -73,14 +73,14 @@ This document describes all available REST and GraphQL endpoints for the platfor
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/userfavourite` | Create a new user favourite |
-| GET | `/userfavourites` | Get all user favourites |
-| GET | `/userfavourite/:id` | Get user favourite by ID |
-| GET | `/userfavourites/user/:userid` | Get all favourites for a specific user |
-| PUT | `/userfavourite/:id` | Update user favourite by ID |
-| DELETE | `/userfavourite/:id` | Delete user favourite by ID |
+| POST | `/userstar` | Create a new user favourite |
+| GET | `/userstars` | Get all user favourites |
+| GET | `/userstar/:id` | Get user favourite by ID |
+| GET | `/userstars/user/:userid` | Get all favourites for a specific user |
+| PUT | `/userstar/:id` | Update user favourite by ID |
+| DELETE | `/userstar/:id` | Delete user favourite by ID |
 
-**UserFavourite Model:**
+**UserStar Model:**
 ```json
 {
   "id": 1,
@@ -169,7 +169,7 @@ query {
 ```graphql
 # Get all user favourites
 query {
-  userfavourites {
+  userstars {
     id
     userid
     type
@@ -179,7 +179,7 @@ query {
 
 # Get user favourite by ID
 query {
-  userfavourite(id: "1") {
+  userstar(id: "1") {
     id
     userid
     type
@@ -189,7 +189,7 @@ query {
 
 # Get favourites by user ID
 query {
-  userfavouritesByUser(userid: 123) {
+  userstarsByUser(userid: 123) {
     id
     type
     assetid
@@ -293,7 +293,7 @@ mutation {
 ```graphql
 # Create user favourite
 mutation {
-  createUserFavourite(input: {
+  createUserStar(input: {
     userid: 123
     type: "chart"
     assetid: 456
@@ -307,7 +307,7 @@ mutation {
 
 # Update user favourite
 mutation {
-  updateUserFavourite(id: "1", input: {
+  updateUserStar(id: "1", input: {
     type: "insight"
     assetid: 789
   }) {
@@ -319,7 +319,7 @@ mutation {
 
 # Delete user favourite
 mutation {
-  deleteUserFavourite(id: "1")
+  deleteUserStar(id: "1")
 }
 ```
 
@@ -327,7 +327,7 @@ mutation {
 
 ## Data Relationships
 
-The `UserFavourite` model allows users to favourite different types of assets:
+The `UserStar` model allows users to favourite different types of assets:
 
 - **Type:** "audience" → References an Audience (via `assetid`)
 - **Type:** "chart" → References a Chart (via `assetid`)

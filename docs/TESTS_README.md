@@ -24,9 +24,9 @@ The testing suite includes:
 tests/
 ├── e2e/                      # End-to-end functional tests
 │   ├── setup_test.go         # Test infrastructure and helpers
-│   └── userinterface_test.go # UserInterface query tests
+│   └── userstared_test.go # UserStared query tests
 ├── performance/              # Performance benchmarks
-│   └── userinterface_bench_test.go
+│   └── userstared_bench_test.go
 └── README.md                 # This file
 ```
 
@@ -81,7 +81,7 @@ go test ./tests/e2e/... -v
 #### Run specific test:
 
 ```bash
-go test ./tests/e2e/... -v -run TestUserInterface_WithFavourites
+go test ./tests/e2e/... -v -run TestUserStared_WithFavourites
 ```
 
 #### Run with verbose output:
@@ -103,16 +103,16 @@ Current E2E tests cover:
 ### E2E Test Output Example
 
 ```
-=== RUN   TestUserInterface_EmptyFavourites
---- PASS: TestUserInterface_EmptyFavourites (0.02s)
-=== RUN   TestUserInterface_WithFavourites
---- PASS: TestUserInterface_WithFavourites (0.05s)
-=== RUN   TestUserInterface_MultipleFavouritesOfSameType
---- PASS: TestUserInterface_MultipleFavouritesOfSameType (0.04s)
-=== RUN   TestUserInterface_OnlySpecificUser
---- PASS: TestUserInterface_OnlySpecificUser (0.03s)
-=== RUN   TestUserInterface_InvalidUserID
---- PASS: TestUserInterface_InvalidUserID (0.01s)
+=== RUN   TestUserStared_EmptyFavourites
+--- PASS: TestUserStared_EmptyFavourites (0.02s)
+=== RUN   TestUserStared_WithFavourites
+--- PASS: TestUserStared_WithFavourites (0.05s)
+=== RUN   TestUserStared_MultipleFavouritesOfSameType
+--- PASS: TestUserStared_MultipleFavouritesOfSameType (0.04s)
+=== RUN   TestUserStared_OnlySpecificUser
+--- PASS: TestUserStared_OnlySpecificUser (0.03s)
+=== RUN   TestUserStared_InvalidUserID
+--- PASS: TestUserStared_InvalidUserID (0.01s)
 PASS
 ```
 
@@ -120,7 +120,7 @@ PASS
 
 To add new E2E tests:
 
-1. Create a new test function in `tests/e2e/userinterface_test.go`
+1. Create a new test function in `tests/e2e/userstared_test.go`
 2. Use the helper functions:
    - `ExecuteGraphQL(t, query, variables)` - Execute GraphQL queries
    - `CleanupTestData(testDB)` - Clean database before test
@@ -130,7 +130,7 @@ To add new E2E tests:
 Example:
 
 ```go
-func TestUserInterface_YourNewTest(t *testing.T) {
+func TestUserStared_YourNewTest(t *testing.T) {
     // Arrange
     CleanupTestData(testDB)
     audienceID, _, _ := SeedTestData(t, testDB)
@@ -163,7 +163,7 @@ go test ./tests/performance/... -bench=. -benchmem
 #### Run specific benchmark:
 
 ```bash
-go test ./tests/performance/... -bench=BenchmarkUserInterface_SmallDataset -benchmem
+go test ./tests/performance/... -bench=BenchmarkUserStared_SmallDataset -benchmem
 ```
 
 #### Run with custom duration:
@@ -182,19 +182,19 @@ go test ./tests/performance/... -bench=. -benchmem | tee bench-results.txt
 
 | Benchmark | Description | Data Size |
 |-----------|-------------|-----------|
-| `BenchmarkUserInterface_SmallDataset` | 5 items per user | Small |
-| `BenchmarkUserInterface_MediumDataset` | 50 items per user | Medium |
-| `BenchmarkUserInterface_LargeDataset` | 200 items per user | Large |
-| `BenchmarkUserInterface_MinimalFields` | Only IDs queried | 50 items |
-| `BenchmarkUserInterface_AllFields` | All fields queried | 50 items |
-| `BenchmarkUserInterface_Parallel` | Concurrent requests | 50 items/user, 100 users |
+| `BenchmarkUserStared_SmallDataset` | 5 items per user | Small |
+| `BenchmarkUserStared_MediumDataset` | 50 items per user | Medium |
+| `BenchmarkUserStared_LargeDataset` | 200 items per user | Large |
+| `BenchmarkUserStared_MinimalFields` | Only IDs queried | 50 items |
+| `BenchmarkUserStared_AllFields` | All fields queried | 50 items |
+| `BenchmarkUserStared_Parallel` | Concurrent requests | 50 items/user, 100 users |
 
 ### Benchmark Output Example
 
 ```
-BenchmarkUserInterface_SmallDataset-8         1000    1234567 ns/op    123456 B/op    1234 allocs/op
-BenchmarkUserInterface_MediumDataset-8         500    2345678 ns/op    234567 B/op    2345 allocs/op
-BenchmarkUserInterface_LargeDataset-8          200    5678901 ns/op    456789 B/op    3456 allocs/op
+BenchmarkUserStared_SmallDataset-8         1000    1234567 ns/op    123456 B/op    1234 allocs/op
+BenchmarkUserStared_MediumDataset-8         500    2345678 ns/op    234567 B/op    2345 allocs/op
+BenchmarkUserStared_LargeDataset-8          200    5678901 ns/op    456789 B/op    3456 allocs/op
 ```
 
 **Reading the output:**
@@ -263,9 +263,9 @@ Consider adding Redis caching for frequently accessed data:
 
 ```go
 // Pseudo-code
-func (r *queryResolver) Userinterface(ctx context.Context, userID string) (*model.UserInterface, error) {
+func (r *queryResolver) Userstars(ctx context.Context, userID string) (*model.UserStared, error) {
     // Try cache first
-    if cached, found := redis.Get("userinterface:" + userID); found {
+    if cached, found := redis.Get("userstared:" + userID); found {
         return cached, nil
     }
 
@@ -273,7 +273,7 @@ func (r *queryResolver) Userinterface(ctx context.Context, userID string) (*mode
     result := // ... existing logic
 
     // Cache result
-    redis.Set("userinterface:" + userID, result, 5*time.Minute)
+    redis.Set("userstared:" + userID, result, 5*time.Minute)
 
     return result, nil
 }

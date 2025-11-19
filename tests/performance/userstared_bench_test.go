@@ -48,7 +48,7 @@ func setupBenchDB() *gorm.DB {
 		&models.Audience{},
 		&models.Chart{},
 		&models.Insight{},
-		&models.UserFavourite{},
+		&models.UserStar{},
 	)
 
 	return database
@@ -112,17 +112,17 @@ func seedBenchmarkData(database *gorm.DB, numUsers, itemsPerUser int) {
 	// Create favourites for each user
 	for userID := 1; userID <= numUsers; userID++ {
 		for i := 0; i < itemsPerUser; i++ {
-			database.Create(&models.UserFavourite{
+			database.Create(&models.UserStar{
 				UserID:  uint(userID),
 				Type:    "Audience",
 				AssetID: audiences[i].ID,
 			})
-			database.Create(&models.UserFavourite{
+			database.Create(&models.UserStar{
 				UserID:  uint(userID),
 				Type:    "Chart",
 				AssetID: charts[i].ID,
 			})
-			database.Create(&models.UserFavourite{
+			database.Create(&models.UserStar{
 				UserID:  uint(userID),
 				Type:    "Insight",
 				AssetID: insights[i].ID,
@@ -154,8 +154,8 @@ func executeGraphQLBench(b *testing.B, query string, variables map[string]interf
 	}
 }
 
-// BenchmarkUserInterface_SmallDataset benchmarks with 5 items per user
-func BenchmarkUserInterface_SmallDataset(b *testing.B) {
+// BenchmarkUserStared_SmallDataset benchmarks with 5 items per user
+func BenchmarkUserStared_SmallDataset(b *testing.B) {
 	if benchDB == nil {
 		benchDB = setupBenchDB()
 		db.GormDB = benchDB
@@ -165,8 +165,8 @@ func BenchmarkUserInterface_SmallDataset(b *testing.B) {
 	seedBenchmarkData(benchDB, 10, 5)
 
 	query := `
-		query GetUserInterface($userID: ID!) {
-			userinterface(userID: $userID) {
+		query GetUserStared($userID: ID!) {
+			userstared(userID: $userID) {
 				userid
 				audience {
 					id
@@ -200,8 +200,8 @@ func BenchmarkUserInterface_SmallDataset(b *testing.B) {
 	}
 }
 
-// BenchmarkUserInterface_MediumDataset benchmarks with 50 items per user
-func BenchmarkUserInterface_MediumDataset(b *testing.B) {
+// BenchmarkUserStared_MediumDataset benchmarks with 50 items per user
+func BenchmarkUserStared_MediumDataset(b *testing.B) {
 	if benchDB == nil {
 		benchDB = setupBenchDB()
 		db.GormDB = benchDB
@@ -211,8 +211,8 @@ func BenchmarkUserInterface_MediumDataset(b *testing.B) {
 	seedBenchmarkData(benchDB, 10, 50)
 
 	query := `
-		query GetUserInterface($userID: ID!) {
-			userinterface(userID: $userID) {
+		query GetUserStared($userID: ID!) {
+			userstared(userID: $userID) {
 				userid
 				audience { id gender }
 				chart { id title }
@@ -231,8 +231,8 @@ func BenchmarkUserInterface_MediumDataset(b *testing.B) {
 	}
 }
 
-// BenchmarkUserInterface_LargeDataset benchmarks with 200 items per user
-func BenchmarkUserInterface_LargeDataset(b *testing.B) {
+// BenchmarkUserStared_LargeDataset benchmarks with 200 items per user
+func BenchmarkUserStared_LargeDataset(b *testing.B) {
 	if benchDB == nil {
 		benchDB = setupBenchDB()
 		db.GormDB = benchDB
@@ -242,8 +242,8 @@ func BenchmarkUserInterface_LargeDataset(b *testing.B) {
 	seedBenchmarkData(benchDB, 10, 200)
 
 	query := `
-		query GetUserInterface($userID: ID!) {
-			userinterface(userID: $userID) {
+		query GetUserStared($userID: ID!) {
+			userstared(userID: $userID) {
 				userid
 				audience { id gender }
 				chart { id title }
@@ -262,8 +262,8 @@ func BenchmarkUserInterface_LargeDataset(b *testing.B) {
 	}
 }
 
-// BenchmarkUserInterface_MinimalFields benchmarks with minimal field selection
-func BenchmarkUserInterface_MinimalFields(b *testing.B) {
+// BenchmarkUserStared_MinimalFields benchmarks with minimal field selection
+func BenchmarkUserStared_MinimalFields(b *testing.B) {
 	if benchDB == nil {
 		benchDB = setupBenchDB()
 		db.GormDB = benchDB
@@ -273,8 +273,8 @@ func BenchmarkUserInterface_MinimalFields(b *testing.B) {
 	seedBenchmarkData(benchDB, 10, 50)
 
 	query := `
-		query GetUserInterface($userID: ID!) {
-			userinterface(userID: $userID) {
+		query GetUserStared($userID: ID!) {
+			userstared(userID: $userID) {
 				userid
 				audience { id }
 				chart { id }
@@ -293,8 +293,8 @@ func BenchmarkUserInterface_MinimalFields(b *testing.B) {
 	}
 }
 
-// BenchmarkUserInterface_AllFields benchmarks with all fields selected
-func BenchmarkUserInterface_AllFields(b *testing.B) {
+// BenchmarkUserStared_AllFields benchmarks with all fields selected
+func BenchmarkUserStared_AllFields(b *testing.B) {
 	if benchDB == nil {
 		benchDB = setupBenchDB()
 		db.GormDB = benchDB
@@ -304,8 +304,8 @@ func BenchmarkUserInterface_AllFields(b *testing.B) {
 	seedBenchmarkData(benchDB, 10, 50)
 
 	query := `
-		query GetUserInterface($userID: ID!) {
-			userinterface(userID: $userID) {
+		query GetUserStared($userID: ID!) {
+			userstared(userID: $userID) {
 				userid
 				audience {
 					id
@@ -339,8 +339,8 @@ func BenchmarkUserInterface_AllFields(b *testing.B) {
 	}
 }
 
-// BenchmarkUserInterface_Parallel benchmarks concurrent requests
-func BenchmarkUserInterface_Parallel(b *testing.B) {
+// BenchmarkUserStared_Parallel benchmarks concurrent requests
+func BenchmarkUserStared_Parallel(b *testing.B) {
 	if benchDB == nil {
 		benchDB = setupBenchDB()
 		db.GormDB = benchDB
@@ -350,8 +350,8 @@ func BenchmarkUserInterface_Parallel(b *testing.B) {
 	seedBenchmarkData(benchDB, 100, 50)
 
 	query := `
-		query GetUserInterface($userID: ID!) {
-			userinterface(userID: $userID) {
+		query GetUserStared($userID: ID!) {
+			userstared(userID: $userID) {
 				userid
 				audience { id gender }
 				chart { id title }

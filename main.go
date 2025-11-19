@@ -58,12 +58,12 @@ func main() {
 	router.PUT("/insight/:id", api.UpdateInsight)
 	router.DELETE("/insight/:id", api.DeleteInsight)
 
-	// UserFavourite routes
-	router.POST("/userfavourite", api.CreateUserFavourite)
-	router.GET("/userfavourites", api.GetUserFavourites)
-	router.GET("/userfavourite/:id", api.GetUserFavourite)
-	router.PUT("/userfavourite/:id", api.UpdateUserFavourite)
-	router.DELETE("/userfavourite/:id", api.DeleteUserFavourite)
+	// UserStar routes
+	router.POST("/userstar", api.CreateUserStar)
+	router.GET("/userstars", api.GetUserStars)
+	router.GET("/userstar/:id", api.GetUserStar)
+	router.PUT("/userstar/:id", api.UpdateUserStar)
+	router.DELETE("/userstar/:id", api.DeleteUserStar)
 
 	// GraphQL routes
 	router.POST("/graphql", graphqlHandler(resolver))

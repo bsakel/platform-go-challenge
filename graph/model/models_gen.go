@@ -27,7 +27,7 @@ type NewInsight struct {
 	Text string `json:"text"`
 }
 
-type NewUserFavourite struct {
+type NewUserStar struct {
 	Userid  int    `json:"userid"`
 	Type    string `json:"type"`
 	Assetid int    `json:"assetid"`
@@ -54,13 +54,13 @@ type UpdateInsight struct {
 	Text *string `json:"text,omitempty"`
 }
 
-type UpdateUserFavourite struct {
+type UpdateUserStar struct {
 	Userid  *int    `json:"userid,omitempty"`
 	Type    *string `json:"type,omitempty"`
 	Assetid *int    `json:"assetid,omitempty"`
 }
 
-type UserInterface struct {
+type UserStared struct {
 	Userid   int                `json:"userid"`
 	Audience []*models.Audience `json:"audience"`
 	Chart    []*models.Chart    `json:"chart"`

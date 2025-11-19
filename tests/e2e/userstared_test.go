@@ -28,13 +28,13 @@ type gqlInsight struct {
 	Text string `json:"text"`
 }
 
-// TestUserInterface_EmptyFavourites tests when user has no favourites
-func TestUserInterface_EmptyFavourites(t *testing.T) {
+// TestUserStared_EmptyFavourites tests when user has no favourites
+func TestUserStared_EmptyFavourites(t *testing.T) {
 	CleanupTestData(testDB)
 
 	query := `
-		query GetUserInterface($userID: ID!) {
-			userinterface(userID: $userID) {
+		query GetUserStared($userID: ID!) {
+			userstared(userID: $userID) {
 				userid
 				audience {
 					id
@@ -63,44 +63,44 @@ func TestUserInterface_EmptyFavourites(t *testing.T) {
 	}
 
 	var result struct {
-		Userinterface struct {
+		Userstars struct {
 			Userid   int           `json:"userid"`
 			Audience []gqlAudience `json:"audience"`
 			Chart    []gqlChart    `json:"chart"`
 			Insight  []gqlInsight  `json:"insight"`
-		} `json:"userinterface"`
+		} `json:"userstared"`
 	}
 
 	if err := json.Unmarshal(resp.Data, &result); err != nil {
 		t.Fatalf("failed to unmarshal response: %v", err)
 	}
 
-	if result.Userinterface.Userid != 999 {
-		t.Errorf("expected userid 999, got %d", result.Userinterface.Userid)
+	if result.Userstars.Userid != 999 {
+		t.Errorf("expected userid 999, got %d", result.Userstars.Userid)
 	}
 
-	if len(result.Userinterface.Audience) != 0 {
-		t.Errorf("expected 0 audiences, got %d", len(result.Userinterface.Audience))
+	if len(result.Userstars.Audience) != 0 {
+		t.Errorf("expected 0 audiences, got %d", len(result.Userstars.Audience))
 	}
 
-	if len(result.Userinterface.Chart) != 0 {
-		t.Errorf("expected 0 charts, got %d", len(result.Userinterface.Chart))
+	if len(result.Userstars.Chart) != 0 {
+		t.Errorf("expected 0 charts, got %d", len(result.Userstars.Chart))
 	}
 
-	if len(result.Userinterface.Insight) != 0 {
-		t.Errorf("expected 0 insights, got %d", len(result.Userinterface.Insight))
+	if len(result.Userstars.Insight) != 0 {
+		t.Errorf("expected 0 insights, got %d", len(result.Userstars.Insight))
 	}
 }
 
-// TestUserInterface_WithFavourites tests fetching user favourites with all asset types
-func TestUserInterface_WithFavourites(t *testing.T) {
+// TestUserStared_WithFavourites tests fetching user favourites with all asset types
+func TestUserStared_WithFavourites(t *testing.T) {
 	CleanupTestData(testDB)
 
 	// Seed test data
 	audienceID, chartID, insightID := SeedTestData(t, testDB)
 
 	// Create favourites for user 1
-	favourites := []models.UserFavourite{
+	favourites := []models.UserStar{
 		{UserID: 1, Type: "Audience", AssetID: audienceID},
 		{UserID: 1, Type: "Chart", AssetID: chartID},
 		{UserID: 1, Type: "Insight", AssetID: insightID},
@@ -113,8 +113,8 @@ func TestUserInterface_WithFavourites(t *testing.T) {
 	}
 
 	query := `
-		query GetUserInterface($userID: ID!) {
-			userinterface(userID: $userID) {
+		query GetUserStared($userID: ID!) {
+			userstared(userID: $userID) {
 				userid
 				audience {
 					id
@@ -149,12 +149,12 @@ func TestUserInterface_WithFavourites(t *testing.T) {
 	}
 
 	var result struct {
-		Userinterface struct {
+		Userstars struct {
 			Userid   int           `json:"userid"`
 			Audience []gqlAudience `json:"audience"`
 			Chart    []gqlChart    `json:"chart"`
 			Insight  []gqlInsight  `json:"insight"`
-		} `json:"userinterface"`
+		} `json:"userstared"`
 	}
 
 	if err := json.Unmarshal(resp.Data, &result); err != nil {
@@ -162,40 +162,40 @@ func TestUserInterface_WithFavourites(t *testing.T) {
 	}
 
 	// Verify user ID
-	if result.Userinterface.Userid != 1 {
-		t.Errorf("expected userid 1, got %d", result.Userinterface.Userid)
+	if result.Userstars.Userid != 1 {
+		t.Errorf("expected userid 1, got %d", result.Userstars.Userid)
 	}
 
 	// Verify audiences
-	if len(result.Userinterface.Audience) != 1 {
-		t.Fatalf("expected 1 audience, got %d", len(result.Userinterface.Audience))
+	if len(result.Userstars.Audience) != 1 {
+		t.Fatalf("expected 1 audience, got %d", len(result.Userstars.Audience))
 	}
-	if result.Userinterface.Audience[0].Gender != "Male" {
-		t.Errorf("expected gender 'Male', got '%s'", result.Userinterface.Audience[0].Gender)
+	if result.Userstars.Audience[0].Gender != "Male" {
+		t.Errorf("expected gender 'Male', got '%s'", result.Userstars.Audience[0].Gender)
 	}
-	if result.Userinterface.Audience[0].Birthcountry != "USA" {
-		t.Errorf("expected birthcountry 'USA', got '%s'", result.Userinterface.Audience[0].Birthcountry)
+	if result.Userstars.Audience[0].Birthcountry != "USA" {
+		t.Errorf("expected birthcountry 'USA', got '%s'", result.Userstars.Audience[0].Birthcountry)
 	}
 
 	// Verify charts
-	if len(result.Userinterface.Chart) != 1 {
-		t.Fatalf("expected 1 chart, got %d", len(result.Userinterface.Chart))
+	if len(result.Userstars.Chart) != 1 {
+		t.Fatalf("expected 1 chart, got %d", len(result.Userstars.Chart))
 	}
-	if result.Userinterface.Chart[0].Title != "Sales Chart" {
-		t.Errorf("expected title 'Sales Chart', got '%s'", result.Userinterface.Chart[0].Title)
+	if result.Userstars.Chart[0].Title != "Sales Chart" {
+		t.Errorf("expected title 'Sales Chart', got '%s'", result.Userstars.Chart[0].Title)
 	}
 
 	// Verify insights
-	if len(result.Userinterface.Insight) != 1 {
-		t.Fatalf("expected 1 insight, got %d", len(result.Userinterface.Insight))
+	if len(result.Userstars.Insight) != 1 {
+		t.Fatalf("expected 1 insight, got %d", len(result.Userstars.Insight))
 	}
-	if result.Userinterface.Insight[0].Text != "Revenue increased by 20% this quarter" {
-		t.Errorf("expected specific insight text, got '%s'", result.Userinterface.Insight[0].Text)
+	if result.Userstars.Insight[0].Text != "Revenue increased by 20% this quarter" {
+		t.Errorf("expected specific insight text, got '%s'", result.Userstars.Insight[0].Text)
 	}
 }
 
-// TestUserInterface_MultipleFavouritesOfSameType tests multiple favourites of the same type
-func TestUserInterface_MultipleFavouritesOfSameType(t *testing.T) {
+// TestUserStared_MultipleFavouritesOfSameType tests multiple favourites of the same type
+func TestUserStared_MultipleFavouritesOfSameType(t *testing.T) {
 	CleanupTestData(testDB)
 
 	// Create multiple audiences
@@ -218,12 +218,12 @@ func TestUserInterface_MultipleFavouritesOfSameType(t *testing.T) {
 	testDB.Create(&audience2)
 
 	// Create favourites
-	testDB.Create(&models.UserFavourite{UserID: 2, Type: "Audience", AssetID: audience1.ID})
-	testDB.Create(&models.UserFavourite{UserID: 2, Type: "Audience", AssetID: audience2.ID})
+	testDB.Create(&models.UserStar{UserID: 2, Type: "Audience", AssetID: audience1.ID})
+	testDB.Create(&models.UserStar{UserID: 2, Type: "Audience", AssetID: audience2.ID})
 
 	query := `
-		query GetUserInterface($userID: ID!) {
-			userinterface(userID: $userID) {
+		query GetUserStared($userID: ID!) {
+			userstared(userID: $userID) {
 				userid
 				audience {
 					id
@@ -245,23 +245,23 @@ func TestUserInterface_MultipleFavouritesOfSameType(t *testing.T) {
 	}
 
 	var result struct {
-		Userinterface struct {
+		Userstars struct {
 			Userid   int           `json:"userid"`
 			Audience []gqlAudience `json:"audience"`
-		} `json:"userinterface"`
+		} `json:"userstared"`
 	}
 
 	if err := json.Unmarshal(resp.Data, &result); err != nil {
 		t.Fatalf("failed to unmarshal response: %v", err)
 	}
 
-	if len(result.Userinterface.Audience) != 2 {
-		t.Fatalf("expected 2 audiences, got %d", len(result.Userinterface.Audience))
+	if len(result.Userstars.Audience) != 2 {
+		t.Fatalf("expected 2 audiences, got %d", len(result.Userstars.Audience))
 	}
 
 	// Verify both audiences are returned
 	genders := make(map[string]bool)
-	for _, aud := range result.Userinterface.Audience {
+	for _, aud := range result.Userstars.Audience {
 		genders[aud.Gender] = true
 	}
 
@@ -270,22 +270,22 @@ func TestUserInterface_MultipleFavouritesOfSameType(t *testing.T) {
 	}
 }
 
-// TestUserInterface_OnlySpecificUser tests that only the requested user's favourites are returned
-func TestUserInterface_OnlySpecificUser(t *testing.T) {
+// TestUserStared_OnlySpecificUser tests that only the requested user's favourites are returned
+func TestUserStared_OnlySpecificUser(t *testing.T) {
 	CleanupTestData(testDB)
 
 	// Create test data
 	audienceID, chartID, _ := SeedTestData(t, testDB)
 
 	// Create favourites for user 1
-	testDB.Create(&models.UserFavourite{UserID: 1, Type: "Audience", AssetID: audienceID})
+	testDB.Create(&models.UserStar{UserID: 1, Type: "Audience", AssetID: audienceID})
 
 	// Create favourites for user 2
-	testDB.Create(&models.UserFavourite{UserID: 2, Type: "Chart", AssetID: chartID})
+	testDB.Create(&models.UserStar{UserID: 2, Type: "Chart", AssetID: chartID})
 
 	query := `
-		query GetUserInterface($userID: ID!) {
-			userinterface(userID: $userID) {
+		query GetUserStared($userID: ID!) {
+			userstared(userID: $userID) {
 				userid
 				audience { id }
 				chart { id }
@@ -305,11 +305,11 @@ func TestUserInterface_OnlySpecificUser(t *testing.T) {
 	}
 
 	var result struct {
-		Userinterface struct {
+		Userstars struct {
 			Userid   int           `json:"userid"`
 			Audience []gqlAudience `json:"audience"`
 			Chart    []gqlChart    `json:"chart"`
-		} `json:"userinterface"`
+		} `json:"userstared"`
 	}
 
 	if err := json.Unmarshal(resp.Data, &result); err != nil {
@@ -317,20 +317,20 @@ func TestUserInterface_OnlySpecificUser(t *testing.T) {
 	}
 
 	// User 1 should have 1 audience and 0 charts
-	if len(result.Userinterface.Audience) != 1 {
-		t.Errorf("expected 1 audience for user 1, got %d", len(result.Userinterface.Audience))
+	if len(result.Userstars.Audience) != 1 {
+		t.Errorf("expected 1 audience for user 1, got %d", len(result.Userstars.Audience))
 	}
 
-	if len(result.Userinterface.Chart) != 0 {
-		t.Errorf("expected 0 charts for user 1, got %d", len(result.Userinterface.Chart))
+	if len(result.Userstars.Chart) != 0 {
+		t.Errorf("expected 0 charts for user 1, got %d", len(result.Userstars.Chart))
 	}
 }
 
-// TestUserInterface_InvalidUserID tests error handling for invalid user ID
-func TestUserInterface_InvalidUserID(t *testing.T) {
+// TestUserStared_InvalidUserID tests error handling for invalid user ID
+func TestUserStared_InvalidUserID(t *testing.T) {
 	query := `
-		query GetUserInterface($userID: ID!) {
-			userinterface(userID: $userID) {
+		query GetUserStared($userID: ID!) {
+			userstared(userID: $userID) {
 				userid
 			}
 		}

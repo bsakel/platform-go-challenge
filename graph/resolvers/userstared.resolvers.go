@@ -11,12 +11,12 @@ import (
 	"platform-go-challenge/models"
 )
 
-// Userinterface is the resolver for the userinterface field.
-func (r *queryResolver) Userinterface(ctx context.Context, userID string) (*model.UserInterface, error) {
-	// Fetch all user favourites for this user
-	var userFavourites []models.UserFavourite
-	if err := r.DB.Where("user_id = ?", userID).Find(&userFavourites).Error; err != nil {
-		return nil, fmt.Errorf("failed to fetch user favourites: %w", err)
+// Userstared is the resolver for the userstared field.
+func (r *queryResolver) Userstared(ctx context.Context, userID string) (*model.UserStared, error) {
+	// Fetch all user stars for this user
+	var userStars []models.UserStar
+	if err := r.DB.Where("user_id = ?", userID).Find(&userStars).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch user stars: %w", err)
 	}
 
 	// Initialize slices to hold IDs for each asset type
@@ -25,14 +25,14 @@ func (r *queryResolver) Userinterface(ctx context.Context, userID string) (*mode
 	var insightIDs []uint
 
 	// Group asset IDs by type
-	for _, fav := range userFavourites {
-		switch fav.Type {
+	for _, star := range userStars {
+		switch star.Type {
 		case "Audience":
-			audienceIDs = append(audienceIDs, fav.AssetID)
+			audienceIDs = append(audienceIDs, star.AssetID)
 		case "Chart":
-			chartIDs = append(chartIDs, fav.AssetID)
+			chartIDs = append(chartIDs, star.AssetID)
 		case "Insight":
-			insightIDs = append(insightIDs, fav.AssetID)
+			insightIDs = append(insightIDs, star.AssetID)
 		}
 	}
 
@@ -82,8 +82,8 @@ func (r *queryResolver) Userinterface(ctx context.Context, userID string) (*mode
 		return nil, fmt.Errorf("invalid user ID: %w", err)
 	}
 
-	// Build and return the UserInterface response
-	return &model.UserInterface{
+	// Build and return the UserStared response
+	return &model.UserStared{
 		Userid:   userIDInt,
 		Audience: gqlAudiences,
 		Chart:    gqlCharts,

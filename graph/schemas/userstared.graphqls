@@ -1,4 +1,4 @@
-type UserInterface {
+type UserStared {
   userid: Int!
   audience: [Audience!]!
   chart: [Chart!]!
@@ -6,5 +6,5 @@ type UserInterface {
 }
 
 extend type Query {
-  userinterface(userID: ID!): UserInterface
+  userstared(userID: ID!): UserStared
 }

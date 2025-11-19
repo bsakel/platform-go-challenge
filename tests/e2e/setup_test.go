@@ -62,7 +62,7 @@ func SetupTestDB() *gorm.DB {
 		&models.Audience{},
 		&models.Chart{},
 		&models.Insight{},
-		&models.UserFavourite{},
+		&models.UserStar{},
 	)
 
 	return database

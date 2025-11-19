@@ -2,7 +2,7 @@
 
 ## Overview
 
-A comprehensive testing strategy has been implemented for the `userinterface` GraphQL query, covering functional correctness and performance benchmarks.
+A comprehensive testing strategy has been implemented for the `userstared` GraphQL query, covering functional correctness and performance benchmarks.
 
 ## What Was Created
 
@@ -11,7 +11,7 @@ A comprehensive testing strategy has been implemented for the `userinterface` Gr
 
 **Files:**
 - `setup_test.go` - Test infrastructure, helpers, and setup
-- `userinterface_test.go` - Functional tests for the userinterface query
+- `userstared_test.go` - Functional tests for the userstared query
 
 **Test Coverage:**
 - ✅ Empty favourites scenario
@@ -31,7 +31,7 @@ go test ./tests/e2e/... -v
 **Location:** `tests/performance/`
 
 **Files:**
-- `userinterface_bench_test.go` - Go benchmark tests
+- `userstared_bench_test.go` - Go benchmark tests
 
 **Benchmarks:**
 - Small dataset (5 items per user)
@@ -105,7 +105,7 @@ go test ./tests/performance/... -bench=. -benchmem
 
 **Specific Benchmark:**
 ```bash
-go test ./tests/performance/... -bench=BenchmarkUserInterface_SmallDataset -benchmem
+go test ./tests/performance/... -bench=BenchmarkUserStared_SmallDataset -benchmem
 ```
 
 ---
@@ -154,22 +154,22 @@ Report Metrics
 ### E2E Tests
 
 ```
-=== RUN   TestUserInterface_EmptyFavourites
---- PASS: TestUserInterface_EmptyFavourites (0.02s)
-=== RUN   TestUserInterface_WithFavourites
---- PASS: TestUserInterface_WithFavourites (0.05s)
-=== RUN   TestUserInterface_MultipleFavouritesOfSameType
---- PASS: TestUserInterface_MultipleFavouritesOfSameType (0.04s)
+=== RUN   TestUserStared_EmptyFavourites
+--- PASS: TestUserStared_EmptyFavourites (0.02s)
+=== RUN   TestUserStared_WithFavourites
+--- PASS: TestUserStared_WithFavourites (0.05s)
+=== RUN   TestUserStared_MultipleFavouritesOfSameType
+--- PASS: TestUserStared_MultipleFavouritesOfSameType (0.04s)
 PASS
 ```
 
 ### Benchmark Tests
 
 ```
-BenchmarkUserInterface_SmallDataset-8        1000   1234567 ns/op   123456 B/op   1234 allocs/op
-BenchmarkUserInterface_MediumDataset-8        500   2345678 ns/op   234567 B/op   2345 allocs/op
-BenchmarkUserInterface_LargeDataset-8         200   5678901 ns/op   456789 B/op   3456 allocs/op
-BenchmarkUserInterface_Parallel-8            2000    876543 ns/op   123456 B/op   1234 allocs/op
+BenchmarkUserStared_SmallDataset-8        1000   1234567 ns/op   123456 B/op   1234 allocs/op
+BenchmarkUserStared_MediumDataset-8        500   2345678 ns/op   234567 B/op   2345 allocs/op
+BenchmarkUserStared_LargeDataset-8         200   5678901 ns/op   456789 B/op   3456 allocs/op
+BenchmarkUserStared_Parallel-8            2000    876543 ns/op   123456 B/op   1234 allocs/op
 ```
 
 ---
@@ -200,7 +200,7 @@ sqlDB.SetMaxOpenConns(100)
 
 Add Redis caching for frequently accessed user interfaces:
 - TTL: 5-15 minutes
-- Cache key: `userinterface:{userID}`
+- Cache key: `userstared:{userID}`
 - Invalidate on favourite mutations
 
 ### 4. Query Optimization
@@ -234,14 +234,14 @@ benchstat baseline.txt new.txt
 
 ### Adding New E2E Tests
 
-1. Create new test function in `tests/e2e/userinterface_test.go`
+1. Create new test function in `tests/e2e/userstared_test.go`
 2. Use helper functions: `ExecuteGraphQL`, `CleanupTestData`, `SeedTestData`
 3. Follow AAA pattern: Arrange, Act, Assert
 
 ### Adding New Benchmarks
 
-1. Create new benchmark in `tests/performance/userinterface_bench_test.go`
-2. Follow naming: `BenchmarkUserInterface_[Scenario]`
+1. Create new benchmark in `tests/performance/userstared_bench_test.go`
+2. Follow naming: `BenchmarkUserStared_[Scenario]`
 3. Use `b.ResetTimer()` before measurement loop
 
 ---

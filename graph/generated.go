@@ -45,7 +45,7 @@ type ResolverRoot interface {
 	Insight() InsightResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
-	UserFavourite() UserFavouriteResolver
+	UserStar() UserStarResolver
 }
 
 type DirectiveRoot struct {
@@ -74,40 +74,40 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateAudience      func(childComplexity int, input model.NewAudience) int
-		CreateChart         func(childComplexity int, input model.NewChart) int
-		CreateInsight       func(childComplexity int, input model.NewInsight) int
-		CreateUserFavourite func(childComplexity int, input model.NewUserFavourite) int
-		DeleteAudience      func(childComplexity int, id string) int
-		DeleteChart         func(childComplexity int, id string) int
-		DeleteInsight       func(childComplexity int, id string) int
-		DeleteUserFavourite func(childComplexity int, id string) int
-		UpdateAudience      func(childComplexity int, id string, input model.UpdateAudience) int
-		UpdateChart         func(childComplexity int, id string, input model.UpdateChart) int
-		UpdateInsight       func(childComplexity int, id string, input model.UpdateInsight) int
-		UpdateUserFavourite func(childComplexity int, id string, input model.UpdateUserFavourite) int
+		CreateAudience func(childComplexity int, input model.NewAudience) int
+		CreateChart    func(childComplexity int, input model.NewChart) int
+		CreateInsight  func(childComplexity int, input model.NewInsight) int
+		CreateUserStar func(childComplexity int, input model.NewUserStar) int
+		DeleteAudience func(childComplexity int, id string) int
+		DeleteChart    func(childComplexity int, id string) int
+		DeleteInsight  func(childComplexity int, id string) int
+		DeleteUserStar func(childComplexity int, id string) int
+		UpdateAudience func(childComplexity int, id string, input model.UpdateAudience) int
+		UpdateChart    func(childComplexity int, id string, input model.UpdateChart) int
+		UpdateInsight  func(childComplexity int, id string, input model.UpdateInsight) int
+		UpdateUserStar func(childComplexity int, id string, input model.UpdateUserStar) int
 	}
 
 	Query struct {
-		Audience       func(childComplexity int, id string) int
-		Audiences      func(childComplexity int) int
-		Chart          func(childComplexity int, id string) int
-		Charts         func(childComplexity int) int
-		Insight        func(childComplexity int, id string) int
-		Insights       func(childComplexity int) int
-		Userfavourite  func(childComplexity int, id string) int
-		Userfavourites func(childComplexity int) int
-		Userinterface  func(childComplexity int, userID string) int
+		Audience   func(childComplexity int, id string) int
+		Audiences  func(childComplexity int) int
+		Chart      func(childComplexity int, id string) int
+		Charts     func(childComplexity int) int
+		Insight    func(childComplexity int, id string) int
+		Insights   func(childComplexity int) int
+		Userstar   func(childComplexity int, id string) int
+		Userstared func(childComplexity int, userID string) int
+		Userstars  func(childComplexity int) int
 	}
 
-	UserFavourite struct {
+	UserStar struct {
 		Assetid func(childComplexity int) int
 		ID      func(childComplexity int) int
 		Type    func(childComplexity int) int
 		Userid  func(childComplexity int) int
 	}
 
-	UserInterface struct {
+	UserStared struct {
 		Audience func(childComplexity int) int
 		Chart    func(childComplexity int) int
 		Insight  func(childComplexity int) int
@@ -134,9 +134,9 @@ type MutationResolver interface {
 	CreateInsight(ctx context.Context, input model.NewInsight) (*models.Insight, error)
 	UpdateInsight(ctx context.Context, id string, input model.UpdateInsight) (*models.Insight, error)
 	DeleteInsight(ctx context.Context, id string) (bool, error)
-	CreateUserFavourite(ctx context.Context, input model.NewUserFavourite) (*models.UserFavourite, error)
-	UpdateUserFavourite(ctx context.Context, id string, input model.UpdateUserFavourite) (*models.UserFavourite, error)
-	DeleteUserFavourite(ctx context.Context, id string) (bool, error)
+	CreateUserStar(ctx context.Context, input model.NewUserStar) (*models.UserStar, error)
+	UpdateUserStar(ctx context.Context, id string, input model.UpdateUserStar) (*models.UserStar, error)
+	DeleteUserStar(ctx context.Context, id string) (bool, error)
 }
 type QueryResolver interface {
 	Audiences(ctx context.Context) ([]*models.Audience, error)
@@ -145,15 +145,15 @@ type QueryResolver interface {
 	Chart(ctx context.Context, id string) (*models.Chart, error)
 	Insights(ctx context.Context) ([]*models.Insight, error)
 	Insight(ctx context.Context, id string) (*models.Insight, error)
-	Userfavourites(ctx context.Context) ([]*models.UserFavourite, error)
-	Userfavourite(ctx context.Context, id string) (*models.UserFavourite, error)
-	Userinterface(ctx context.Context, userID string) (*model.UserInterface, error)
+	Userstars(ctx context.Context) ([]*models.UserStar, error)
+	Userstar(ctx context.Context, id string) (*models.UserStar, error)
+	Userstared(ctx context.Context, userID string) (*model.UserStared, error)
 }
-type UserFavouriteResolver interface {
-	ID(ctx context.Context, obj *models.UserFavourite) (string, error)
-	Userid(ctx context.Context, obj *models.UserFavourite) (int, error)
+type UserStarResolver interface {
+	ID(ctx context.Context, obj *models.UserStar) (string, error)
+	Userid(ctx context.Context, obj *models.UserStar) (int, error)
 
-	Assetid(ctx context.Context, obj *models.UserFavourite) (int, error)
+	Assetid(ctx context.Context, obj *models.UserStar) (int, error)
 }
 
 type executableSchema struct {
@@ -283,17 +283,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.CreateInsight(childComplexity, args["input"].(model.NewInsight)), true
-	case "Mutation.createUserFavourite":
-		if e.complexity.Mutation.CreateUserFavourite == nil {
+	case "Mutation.createUserStar":
+		if e.complexity.Mutation.CreateUserStar == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createUserFavourite_args(ctx, rawArgs)
+		args, err := ec.field_Mutation_createUserStar_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateUserFavourite(childComplexity, args["input"].(model.NewUserFavourite)), true
+		return e.complexity.Mutation.CreateUserStar(childComplexity, args["input"].(model.NewUserStar)), true
 	case "Mutation.deleteAudience":
 		if e.complexity.Mutation.DeleteAudience == nil {
 			break
@@ -327,17 +327,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.DeleteInsight(childComplexity, args["id"].(string)), true
-	case "Mutation.deleteUserFavourite":
-		if e.complexity.Mutation.DeleteUserFavourite == nil {
+	case "Mutation.deleteUserStar":
+		if e.complexity.Mutation.DeleteUserStar == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_deleteUserFavourite_args(ctx, rawArgs)
+		args, err := ec.field_Mutation_deleteUserStar_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteUserFavourite(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.DeleteUserStar(childComplexity, args["id"].(string)), true
 	case "Mutation.updateAudience":
 		if e.complexity.Mutation.UpdateAudience == nil {
 			break
@@ -371,17 +371,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UpdateInsight(childComplexity, args["id"].(string), args["input"].(model.UpdateInsight)), true
-	case "Mutation.updateUserFavourite":
-		if e.complexity.Mutation.UpdateUserFavourite == nil {
+	case "Mutation.updateUserStar":
+		if e.complexity.Mutation.UpdateUserStar == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_updateUserFavourite_args(ctx, rawArgs)
+		args, err := ec.field_Mutation_updateUserStar_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateUserFavourite(childComplexity, args["id"].(string), args["input"].(model.UpdateUserFavourite)), true
+		return e.complexity.Mutation.UpdateUserStar(childComplexity, args["id"].(string), args["input"].(model.UpdateUserStar)), true
 
 	case "Query.audience":
 		if e.complexity.Query.Audience == nil {
@@ -434,84 +434,84 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.Insights(childComplexity), true
-	case "Query.userfavourite":
-		if e.complexity.Query.Userfavourite == nil {
+	case "Query.userstar":
+		if e.complexity.Query.Userstar == nil {
 			break
 		}
 
-		args, err := ec.field_Query_userfavourite_args(ctx, rawArgs)
+		args, err := ec.field_Query_userstar_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.Userfavourite(childComplexity, args["id"].(string)), true
-	case "Query.userfavourites":
-		if e.complexity.Query.Userfavourites == nil {
+		return e.complexity.Query.Userstar(childComplexity, args["id"].(string)), true
+	case "Query.userstared":
+		if e.complexity.Query.Userstared == nil {
 			break
 		}
 
-		return e.complexity.Query.Userfavourites(childComplexity), true
-	case "Query.userinterface":
-		if e.complexity.Query.Userinterface == nil {
-			break
-		}
-
-		args, err := ec.field_Query_userinterface_args(ctx, rawArgs)
+		args, err := ec.field_Query_userstared_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.Userinterface(childComplexity, args["userID"].(string)), true
-
-	case "UserFavourite.assetid":
-		if e.complexity.UserFavourite.Assetid == nil {
+		return e.complexity.Query.Userstared(childComplexity, args["userID"].(string)), true
+	case "Query.userstars":
+		if e.complexity.Query.Userstars == nil {
 			break
 		}
 
-		return e.complexity.UserFavourite.Assetid(childComplexity), true
-	case "UserFavourite.id":
-		if e.complexity.UserFavourite.ID == nil {
+		return e.complexity.Query.Userstars(childComplexity), true
+
+	case "UserStar.assetid":
+		if e.complexity.UserStar.Assetid == nil {
 			break
 		}
 
-		return e.complexity.UserFavourite.ID(childComplexity), true
-	case "UserFavourite.type":
-		if e.complexity.UserFavourite.Type == nil {
+		return e.complexity.UserStar.Assetid(childComplexity), true
+	case "UserStar.id":
+		if e.complexity.UserStar.ID == nil {
 			break
 		}
 
-		return e.complexity.UserFavourite.Type(childComplexity), true
-	case "UserFavourite.userid":
-		if e.complexity.UserFavourite.Userid == nil {
+		return e.complexity.UserStar.ID(childComplexity), true
+	case "UserStar.type":
+		if e.complexity.UserStar.Type == nil {
 			break
 		}
 
-		return e.complexity.UserFavourite.Userid(childComplexity), true
-
-	case "UserInterface.audience":
-		if e.complexity.UserInterface.Audience == nil {
+		return e.complexity.UserStar.Type(childComplexity), true
+	case "UserStar.userid":
+		if e.complexity.UserStar.Userid == nil {
 			break
 		}
 
-		return e.complexity.UserInterface.Audience(childComplexity), true
-	case "UserInterface.chart":
-		if e.complexity.UserInterface.Chart == nil {
+		return e.complexity.UserStar.Userid(childComplexity), true
+
+	case "UserStared.audience":
+		if e.complexity.UserStared.Audience == nil {
 			break
 		}
 
-		return e.complexity.UserInterface.Chart(childComplexity), true
-	case "UserInterface.insight":
-		if e.complexity.UserInterface.Insight == nil {
+		return e.complexity.UserStared.Audience(childComplexity), true
+	case "UserStared.chart":
+		if e.complexity.UserStared.Chart == nil {
 			break
 		}
 
-		return e.complexity.UserInterface.Insight(childComplexity), true
-	case "UserInterface.userid":
-		if e.complexity.UserInterface.Userid == nil {
+		return e.complexity.UserStared.Chart(childComplexity), true
+	case "UserStared.insight":
+		if e.complexity.UserStared.Insight == nil {
 			break
 		}
 
-		return e.complexity.UserInterface.Userid(childComplexity), true
+		return e.complexity.UserStared.Insight(childComplexity), true
+	case "UserStared.userid":
+		if e.complexity.UserStared.Userid == nil {
+			break
+		}
+
+		return e.complexity.UserStared.Userid(childComplexity), true
 
 	}
 	return 0, false
@@ -524,11 +524,11 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputNewAudience,
 		ec.unmarshalInputNewChart,
 		ec.unmarshalInputNewInsight,
-		ec.unmarshalInputNewUserFavourite,
+		ec.unmarshalInputNewUserStar,
 		ec.unmarshalInputUpdateAudience,
 		ec.unmarshalInputUpdateChart,
 		ec.unmarshalInputUpdateInsight,
-		ec.unmarshalInputUpdateUserFavourite,
+		ec.unmarshalInputUpdateUserStar,
 	)
 	first := true
 
@@ -625,7 +625,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
-//go:embed "schemas/audience.graphqls" "schemas/chart.graphqls" "schemas/insight.graphqls" "schemas/userfavourite.graphqls" "schemas/userinterface.graphqls"
+//go:embed "schemas/audience.graphqls" "schemas/chart.graphqls" "schemas/insight.graphqls" "schemas/userstar.graphqls" "schemas/userstared.graphqls"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -640,8 +640,8 @@ var sources = []*ast.Source{
 	{Name: "schemas/audience.graphqls", Input: sourceData("schemas/audience.graphqls"), BuiltIn: false},
 	{Name: "schemas/chart.graphqls", Input: sourceData("schemas/chart.graphqls"), BuiltIn: false},
 	{Name: "schemas/insight.graphqls", Input: sourceData("schemas/insight.graphqls"), BuiltIn: false},
-	{Name: "schemas/userfavourite.graphqls", Input: sourceData("schemas/userfavourite.graphqls"), BuiltIn: false},
-	{Name: "schemas/userinterface.graphqls", Input: sourceData("schemas/userinterface.graphqls"), BuiltIn: false},
+	{Name: "schemas/userstar.graphqls", Input: sourceData("schemas/userstar.graphqls"), BuiltIn: false},
+	{Name: "schemas/userstared.graphqls", Input: sourceData("schemas/userstared.graphqls"), BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -682,10 +682,10 @@ func (ec *executionContext) field_Mutation_createInsight_args(ctx context.Contex
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createUserFavourite_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_createUserStar_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNNewUserFavourite2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐNewUserFavourite)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNNewUserStar2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐNewUserStar)
 	if err != nil {
 		return nil, err
 	}
@@ -726,7 +726,7 @@ func (ec *executionContext) field_Mutation_deleteInsight_args(ctx context.Contex
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_deleteUserFavourite_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_deleteUserStar_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
@@ -785,7 +785,7 @@ func (ec *executionContext) field_Mutation_updateInsight_args(ctx context.Contex
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_updateUserFavourite_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_updateUserStar_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
@@ -793,7 +793,7 @@ func (ec *executionContext) field_Mutation_updateUserFavourite_args(ctx context.
 		return nil, err
 	}
 	args["id"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateUserFavourite2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐUpdateUserFavourite)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateUserStar2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐUpdateUserStar)
 	if err != nil {
 		return nil, err
 	}
@@ -845,7 +845,7 @@ func (ec *executionContext) field_Query_insight_args(ctx context.Context, rawArg
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_userfavourite_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Query_userstar_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
@@ -856,7 +856,7 @@ func (ec *executionContext) field_Query_userfavourite_args(ctx context.Context, 
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_userinterface_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Query_userstared_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userID", ec.unmarshalNID2string)
@@ -1696,24 +1696,24 @@ func (ec *executionContext) fieldContext_Mutation_deleteInsight(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createUserFavourite(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_createUserStar(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_createUserFavourite,
+		ec.fieldContext_Mutation_createUserStar,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateUserFavourite(ctx, fc.Args["input"].(model.NewUserFavourite))
+			return ec.resolvers.Mutation().CreateUserStar(ctx, fc.Args["input"].(model.NewUserStar))
 		},
 		nil,
-		ec.marshalNUserFavourite2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserFavourite,
+		ec.marshalNUserStar2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserStar,
 		true,
 		true,
 	)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createUserFavourite(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_createUserStar(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1722,15 +1722,15 @@ func (ec *executionContext) fieldContext_Mutation_createUserFavourite(ctx contex
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_UserFavourite_id(ctx, field)
+				return ec.fieldContext_UserStar_id(ctx, field)
 			case "userid":
-				return ec.fieldContext_UserFavourite_userid(ctx, field)
+				return ec.fieldContext_UserStar_userid(ctx, field)
 			case "type":
-				return ec.fieldContext_UserFavourite_type(ctx, field)
+				return ec.fieldContext_UserStar_type(ctx, field)
 			case "assetid":
-				return ec.fieldContext_UserFavourite_assetid(ctx, field)
+				return ec.fieldContext_UserStar_assetid(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type UserFavourite", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type UserStar", field.Name)
 		},
 	}
 	defer func() {
@@ -1740,31 +1740,31 @@ func (ec *executionContext) fieldContext_Mutation_createUserFavourite(ctx contex
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createUserFavourite_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_createUserStar_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_updateUserFavourite(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_updateUserStar(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_updateUserFavourite,
+		ec.fieldContext_Mutation_updateUserStar,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateUserFavourite(ctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateUserFavourite))
+			return ec.resolvers.Mutation().UpdateUserStar(ctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateUserStar))
 		},
 		nil,
-		ec.marshalNUserFavourite2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserFavourite,
+		ec.marshalNUserStar2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserStar,
 		true,
 		true,
 	)
 }
 
-func (ec *executionContext) fieldContext_Mutation_updateUserFavourite(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_updateUserStar(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1773,15 +1773,15 @@ func (ec *executionContext) fieldContext_Mutation_updateUserFavourite(ctx contex
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_UserFavourite_id(ctx, field)
+				return ec.fieldContext_UserStar_id(ctx, field)
 			case "userid":
-				return ec.fieldContext_UserFavourite_userid(ctx, field)
+				return ec.fieldContext_UserStar_userid(ctx, field)
 			case "type":
-				return ec.fieldContext_UserFavourite_type(ctx, field)
+				return ec.fieldContext_UserStar_type(ctx, field)
 			case "assetid":
-				return ec.fieldContext_UserFavourite_assetid(ctx, field)
+				return ec.fieldContext_UserStar_assetid(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type UserFavourite", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type UserStar", field.Name)
 		},
 	}
 	defer func() {
@@ -1791,22 +1791,22 @@ func (ec *executionContext) fieldContext_Mutation_updateUserFavourite(ctx contex
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateUserFavourite_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_updateUserStar_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_deleteUserFavourite(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_deleteUserStar(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_deleteUserFavourite,
+		ec.fieldContext_Mutation_deleteUserStar,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteUserFavourite(ctx, fc.Args["id"].(string))
+			return ec.resolvers.Mutation().DeleteUserStar(ctx, fc.Args["id"].(string))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -1815,7 +1815,7 @@ func (ec *executionContext) _Mutation_deleteUserFavourite(ctx context.Context, f
 	)
 }
 
-func (ec *executionContext) fieldContext_Mutation_deleteUserFavourite(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_deleteUserStar(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1832,7 +1832,7 @@ func (ec *executionContext) fieldContext_Mutation_deleteUserFavourite(ctx contex
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteUserFavourite_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_deleteUserStar_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -2109,23 +2109,23 @@ func (ec *executionContext) fieldContext_Query_insight(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_userfavourites(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_userstars(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_userfavourites,
+		ec.fieldContext_Query_userstars,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().Userfavourites(ctx)
+			return ec.resolvers.Query().Userstars(ctx)
 		},
 		nil,
-		ec.marshalNUserFavourite2ᚕᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserFavouriteᚄ,
+		ec.marshalNUserStar2ᚕᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserStarᚄ,
 		true,
 		true,
 	)
 }
 
-func (ec *executionContext) fieldContext_Query_userfavourites(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_userstars(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -2134,38 +2134,38 @@ func (ec *executionContext) fieldContext_Query_userfavourites(_ context.Context,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_UserFavourite_id(ctx, field)
+				return ec.fieldContext_UserStar_id(ctx, field)
 			case "userid":
-				return ec.fieldContext_UserFavourite_userid(ctx, field)
+				return ec.fieldContext_UserStar_userid(ctx, field)
 			case "type":
-				return ec.fieldContext_UserFavourite_type(ctx, field)
+				return ec.fieldContext_UserStar_type(ctx, field)
 			case "assetid":
-				return ec.fieldContext_UserFavourite_assetid(ctx, field)
+				return ec.fieldContext_UserStar_assetid(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type UserFavourite", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type UserStar", field.Name)
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_userfavourite(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_userstar(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_userfavourite,
+		ec.fieldContext_Query_userstar,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Userfavourite(ctx, fc.Args["id"].(string))
+			return ec.resolvers.Query().Userstar(ctx, fc.Args["id"].(string))
 		},
 		nil,
-		ec.marshalOUserFavourite2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserFavourite,
+		ec.marshalOUserStar2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserStar,
 		true,
 		false,
 	)
 }
 
-func (ec *executionContext) fieldContext_Query_userfavourite(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_userstar(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -2174,15 +2174,15 @@ func (ec *executionContext) fieldContext_Query_userfavourite(ctx context.Context
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_UserFavourite_id(ctx, field)
+				return ec.fieldContext_UserStar_id(ctx, field)
 			case "userid":
-				return ec.fieldContext_UserFavourite_userid(ctx, field)
+				return ec.fieldContext_UserStar_userid(ctx, field)
 			case "type":
-				return ec.fieldContext_UserFavourite_type(ctx, field)
+				return ec.fieldContext_UserStar_type(ctx, field)
 			case "assetid":
-				return ec.fieldContext_UserFavourite_assetid(ctx, field)
+				return ec.fieldContext_UserStar_assetid(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type UserFavourite", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type UserStar", field.Name)
 		},
 	}
 	defer func() {
@@ -2192,31 +2192,31 @@ func (ec *executionContext) fieldContext_Query_userfavourite(ctx context.Context
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_userfavourite_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_userstar_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_userinterface(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_userstared(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_userinterface,
+		ec.fieldContext_Query_userstared,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Userinterface(ctx, fc.Args["userID"].(string))
+			return ec.resolvers.Query().Userstared(ctx, fc.Args["userID"].(string))
 		},
 		nil,
-		ec.marshalOUserInterface2ᚖplatformᚑgoᚑchallengeᚋgraphᚋmodelᚐUserInterface,
+		ec.marshalOUserStared2ᚖplatformᚑgoᚑchallengeᚋgraphᚋmodelᚐUserStared,
 		true,
 		false,
 	)
 }
 
-func (ec *executionContext) fieldContext_Query_userinterface(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_userstared(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -2225,15 +2225,15 @@ func (ec *executionContext) fieldContext_Query_userinterface(ctx context.Context
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "userid":
-				return ec.fieldContext_UserInterface_userid(ctx, field)
+				return ec.fieldContext_UserStared_userid(ctx, field)
 			case "audience":
-				return ec.fieldContext_UserInterface_audience(ctx, field)
+				return ec.fieldContext_UserStared_audience(ctx, field)
 			case "chart":
-				return ec.fieldContext_UserInterface_chart(ctx, field)
+				return ec.fieldContext_UserStared_chart(ctx, field)
 			case "insight":
-				return ec.fieldContext_UserInterface_insight(ctx, field)
+				return ec.fieldContext_UserStared_insight(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type UserInterface", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type UserStared", field.Name)
 		},
 	}
 	defer func() {
@@ -2243,7 +2243,7 @@ func (ec *executionContext) fieldContext_Query_userinterface(ctx context.Context
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_userinterface_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_userstared_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -2358,14 +2358,14 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _UserFavourite_id(ctx context.Context, field graphql.CollectedField, obj *models.UserFavourite) (ret graphql.Marshaler) {
+func (ec *executionContext) _UserStar_id(ctx context.Context, field graphql.CollectedField, obj *models.UserStar) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UserFavourite_id,
+		ec.fieldContext_UserStar_id,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.UserFavourite().ID(ctx, obj)
+			return ec.resolvers.UserStar().ID(ctx, obj)
 		},
 		nil,
 		ec.marshalNID2string,
@@ -2374,9 +2374,9 @@ func (ec *executionContext) _UserFavourite_id(ctx context.Context, field graphql
 	)
 }
 
-func (ec *executionContext) fieldContext_UserFavourite_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserStar_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "UserFavourite",
+		Object:     "UserStar",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
@@ -2387,14 +2387,14 @@ func (ec *executionContext) fieldContext_UserFavourite_id(_ context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _UserFavourite_userid(ctx context.Context, field graphql.CollectedField, obj *models.UserFavourite) (ret graphql.Marshaler) {
+func (ec *executionContext) _UserStar_userid(ctx context.Context, field graphql.CollectedField, obj *models.UserStar) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UserFavourite_userid,
+		ec.fieldContext_UserStar_userid,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.UserFavourite().Userid(ctx, obj)
+			return ec.resolvers.UserStar().Userid(ctx, obj)
 		},
 		nil,
 		ec.marshalNInt2int,
@@ -2403,9 +2403,9 @@ func (ec *executionContext) _UserFavourite_userid(ctx context.Context, field gra
 	)
 }
 
-func (ec *executionContext) fieldContext_UserFavourite_userid(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserStar_userid(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "UserFavourite",
+		Object:     "UserStar",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
@@ -2416,12 +2416,12 @@ func (ec *executionContext) fieldContext_UserFavourite_userid(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _UserFavourite_type(ctx context.Context, field graphql.CollectedField, obj *models.UserFavourite) (ret graphql.Marshaler) {
+func (ec *executionContext) _UserStar_type(ctx context.Context, field graphql.CollectedField, obj *models.UserStar) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UserFavourite_type,
+		ec.fieldContext_UserStar_type,
 		func(ctx context.Context) (any, error) {
 			return obj.Type, nil
 		},
@@ -2432,9 +2432,9 @@ func (ec *executionContext) _UserFavourite_type(ctx context.Context, field graph
 	)
 }
 
-func (ec *executionContext) fieldContext_UserFavourite_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserStar_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "UserFavourite",
+		Object:     "UserStar",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -2445,14 +2445,14 @@ func (ec *executionContext) fieldContext_UserFavourite_type(_ context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _UserFavourite_assetid(ctx context.Context, field graphql.CollectedField, obj *models.UserFavourite) (ret graphql.Marshaler) {
+func (ec *executionContext) _UserStar_assetid(ctx context.Context, field graphql.CollectedField, obj *models.UserStar) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UserFavourite_assetid,
+		ec.fieldContext_UserStar_assetid,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.UserFavourite().Assetid(ctx, obj)
+			return ec.resolvers.UserStar().Assetid(ctx, obj)
 		},
 		nil,
 		ec.marshalNInt2int,
@@ -2461,9 +2461,9 @@ func (ec *executionContext) _UserFavourite_assetid(ctx context.Context, field gr
 	)
 }
 
-func (ec *executionContext) fieldContext_UserFavourite_assetid(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserStar_assetid(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "UserFavourite",
+		Object:     "UserStar",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
@@ -2474,12 +2474,12 @@ func (ec *executionContext) fieldContext_UserFavourite_assetid(_ context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _UserInterface_userid(ctx context.Context, field graphql.CollectedField, obj *model.UserInterface) (ret graphql.Marshaler) {
+func (ec *executionContext) _UserStared_userid(ctx context.Context, field graphql.CollectedField, obj *model.UserStared) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UserInterface_userid,
+		ec.fieldContext_UserStared_userid,
 		func(ctx context.Context) (any, error) {
 			return obj.Userid, nil
 		},
@@ -2490,9 +2490,9 @@ func (ec *executionContext) _UserInterface_userid(ctx context.Context, field gra
 	)
 }
 
-func (ec *executionContext) fieldContext_UserInterface_userid(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserStared_userid(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "UserInterface",
+		Object:     "UserStared",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -2503,12 +2503,12 @@ func (ec *executionContext) fieldContext_UserInterface_userid(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _UserInterface_audience(ctx context.Context, field graphql.CollectedField, obj *model.UserInterface) (ret graphql.Marshaler) {
+func (ec *executionContext) _UserStared_audience(ctx context.Context, field graphql.CollectedField, obj *model.UserStared) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UserInterface_audience,
+		ec.fieldContext_UserStared_audience,
 		func(ctx context.Context) (any, error) {
 			return obj.Audience, nil
 		},
@@ -2519,9 +2519,9 @@ func (ec *executionContext) _UserInterface_audience(ctx context.Context, field g
 	)
 }
 
-func (ec *executionContext) fieldContext_UserInterface_audience(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserStared_audience(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "UserInterface",
+		Object:     "UserStared",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -2546,12 +2546,12 @@ func (ec *executionContext) fieldContext_UserInterface_audience(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _UserInterface_chart(ctx context.Context, field graphql.CollectedField, obj *model.UserInterface) (ret graphql.Marshaler) {
+func (ec *executionContext) _UserStared_chart(ctx context.Context, field graphql.CollectedField, obj *model.UserStared) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UserInterface_chart,
+		ec.fieldContext_UserStared_chart,
 		func(ctx context.Context) (any, error) {
 			return obj.Chart, nil
 		},
@@ -2562,9 +2562,9 @@ func (ec *executionContext) _UserInterface_chart(ctx context.Context, field grap
 	)
 }
 
-func (ec *executionContext) fieldContext_UserInterface_chart(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserStared_chart(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "UserInterface",
+		Object:     "UserStared",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -2585,12 +2585,12 @@ func (ec *executionContext) fieldContext_UserInterface_chart(_ context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _UserInterface_insight(ctx context.Context, field graphql.CollectedField, obj *model.UserInterface) (ret graphql.Marshaler) {
+func (ec *executionContext) _UserStared_insight(ctx context.Context, field graphql.CollectedField, obj *model.UserStared) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UserInterface_insight,
+		ec.fieldContext_UserStared_insight,
 		func(ctx context.Context) (any, error) {
 			return obj.Insight, nil
 		},
@@ -2601,9 +2601,9 @@ func (ec *executionContext) _UserInterface_insight(ctx context.Context, field gr
 	)
 }
 
-func (ec *executionContext) fieldContext_UserInterface_insight(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UserStared_insight(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "UserInterface",
+		Object:     "UserStared",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -4189,8 +4189,8 @@ func (ec *executionContext) unmarshalInputNewInsight(ctx context.Context, obj an
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputNewUserFavourite(ctx context.Context, obj any) (model.NewUserFavourite, error) {
-	var it model.NewUserFavourite
+func (ec *executionContext) unmarshalInputNewUserStar(ctx context.Context, obj any) (model.NewUserStar, error) {
+	var it model.NewUserStar
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -4353,8 +4353,8 @@ func (ec *executionContext) unmarshalInputUpdateInsight(ctx context.Context, obj
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUpdateUserFavourite(ctx context.Context, obj any) (model.UpdateUserFavourite, error) {
-	var it model.UpdateUserFavourite
+func (ec *executionContext) unmarshalInputUpdateUserStar(ctx context.Context, obj any) (model.UpdateUserStar, error) {
+	var it model.UpdateUserStar
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -4739,23 +4739,23 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "createUserFavourite":
+		case "createUserStar":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createUserFavourite(ctx, field)
+				return ec._Mutation_createUserStar(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "updateUserFavourite":
+		case "updateUserStar":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateUserFavourite(ctx, field)
+				return ec._Mutation_updateUserStar(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "deleteUserFavourite":
+		case "deleteUserStar":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteUserFavourite(ctx, field)
+				return ec._Mutation_deleteUserStar(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -4925,7 +4925,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "userfavourites":
+		case "userstars":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -4934,7 +4934,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_userfavourites(ctx, field)
+				res = ec._Query_userstars(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -4947,7 +4947,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "userfavourite":
+		case "userstar":
 			field := field
 
 			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
@@ -4956,7 +4956,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_userfavourite(ctx, field)
+				res = ec._Query_userstar(ctx, field)
 				return res
 			}
 
@@ -4966,7 +4966,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "userinterface":
+		case "userstared":
 			field := field
 
 			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
@@ -4975,7 +4975,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_userinterface(ctx, field)
+				res = ec._Query_userstared(ctx, field)
 				return res
 			}
 
@@ -5016,17 +5016,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
-var userFavouriteImplementors = []string{"UserFavourite"}
+var userStarImplementors = []string{"UserStar"}
 
-func (ec *executionContext) _UserFavourite(ctx context.Context, sel ast.SelectionSet, obj *models.UserFavourite) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, userFavouriteImplementors)
+func (ec *executionContext) _UserStar(ctx context.Context, sel ast.SelectionSet, obj *models.UserStar) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userStarImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("UserFavourite")
+			out.Values[i] = graphql.MarshalString("UserStar")
 		case "id":
 			field := field
 
@@ -5036,7 +5036,7 @@ func (ec *executionContext) _UserFavourite(ctx context.Context, sel ast.Selectio
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._UserFavourite_id(ctx, field, obj)
+				res = ec._UserStar_id(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -5072,7 +5072,7 @@ func (ec *executionContext) _UserFavourite(ctx context.Context, sel ast.Selectio
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._UserFavourite_userid(ctx, field, obj)
+				res = ec._UserStar_userid(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -5100,7 +5100,7 @@ func (ec *executionContext) _UserFavourite(ctx context.Context, sel ast.Selectio
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "type":
-			out.Values[i] = ec._UserFavourite_type(ctx, field, obj)
+			out.Values[i] = ec._UserStar_type(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
@@ -5113,7 +5113,7 @@ func (ec *executionContext) _UserFavourite(ctx context.Context, sel ast.Selectio
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._UserFavourite_assetid(ctx, field, obj)
+				res = ec._UserStar_assetid(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -5163,34 +5163,34 @@ func (ec *executionContext) _UserFavourite(ctx context.Context, sel ast.Selectio
 	return out
 }
 
-var userInterfaceImplementors = []string{"UserInterface"}
+var userStaredImplementors = []string{"UserStared"}
 
-func (ec *executionContext) _UserInterface(ctx context.Context, sel ast.SelectionSet, obj *model.UserInterface) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, userInterfaceImplementors)
+func (ec *executionContext) _UserStared(ctx context.Context, sel ast.SelectionSet, obj *model.UserStared) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userStaredImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("UserInterface")
+			out.Values[i] = graphql.MarshalString("UserStared")
 		case "userid":
-			out.Values[i] = ec._UserInterface_userid(ctx, field, obj)
+			out.Values[i] = ec._UserStared_userid(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "audience":
-			out.Values[i] = ec._UserInterface_audience(ctx, field, obj)
+			out.Values[i] = ec._UserStared_audience(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "chart":
-			out.Values[i] = ec._UserInterface_chart(ctx, field, obj)
+			out.Values[i] = ec._UserStared_chart(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "insight":
-			out.Values[i] = ec._UserInterface_insight(ctx, field, obj)
+			out.Values[i] = ec._UserStared_insight(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -5789,8 +5789,8 @@ func (ec *executionContext) unmarshalNNewInsight2platformᚑgoᚑchallengeᚋgra
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNNewUserFavourite2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐNewUserFavourite(ctx context.Context, v any) (model.NewUserFavourite, error) {
-	res, err := ec.unmarshalInputNewUserFavourite(ctx, v)
+func (ec *executionContext) unmarshalNNewUserStar2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐNewUserStar(ctx context.Context, v any) (model.NewUserStar, error) {
+	res, err := ec.unmarshalInputNewUserStar(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -5825,16 +5825,16 @@ func (ec *executionContext) unmarshalNUpdateInsight2platformᚑgoᚑchallengeᚋ
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpdateUserFavourite2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐUpdateUserFavourite(ctx context.Context, v any) (model.UpdateUserFavourite, error) {
-	res, err := ec.unmarshalInputUpdateUserFavourite(ctx, v)
+func (ec *executionContext) unmarshalNUpdateUserStar2platformᚑgoᚑchallengeᚋgraphᚋmodelᚐUpdateUserStar(ctx context.Context, v any) (model.UpdateUserStar, error) {
+	res, err := ec.unmarshalInputUpdateUserStar(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNUserFavourite2platformᚑgoᚑchallengeᚋmodelsᚐUserFavourite(ctx context.Context, sel ast.SelectionSet, v models.UserFavourite) graphql.Marshaler {
-	return ec._UserFavourite(ctx, sel, &v)
+func (ec *executionContext) marshalNUserStar2platformᚑgoᚑchallengeᚋmodelsᚐUserStar(ctx context.Context, sel ast.SelectionSet, v models.UserStar) graphql.Marshaler {
+	return ec._UserStar(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNUserFavourite2ᚕᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserFavouriteᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.UserFavourite) graphql.Marshaler {
+func (ec *executionContext) marshalNUserStar2ᚕᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserStarᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.UserStar) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -5858,7 +5858,7 @@ func (ec *executionContext) marshalNUserFavourite2ᚕᚖplatformᚑgoᚑchalleng
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNUserFavourite2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserFavourite(ctx, sel, v[i])
+			ret[i] = ec.marshalNUserStar2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserStar(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -5878,14 +5878,14 @@ func (ec *executionContext) marshalNUserFavourite2ᚕᚖplatformᚑgoᚑchalleng
 	return ret
 }
 
-func (ec *executionContext) marshalNUserFavourite2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserFavourite(ctx context.Context, sel ast.SelectionSet, v *models.UserFavourite) graphql.Marshaler {
+func (ec *executionContext) marshalNUserStar2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserStar(ctx context.Context, sel ast.SelectionSet, v *models.UserStar) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._UserFavourite(ctx, sel, v)
+	return ec._UserStar(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -6228,18 +6228,18 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) marshalOUserFavourite2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserFavourite(ctx context.Context, sel ast.SelectionSet, v *models.UserFavourite) graphql.Marshaler {
+func (ec *executionContext) marshalOUserStar2ᚖplatformᚑgoᚑchallengeᚋmodelsᚐUserStar(ctx context.Context, sel ast.SelectionSet, v *models.UserStar) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec._UserFavourite(ctx, sel, v)
+	return ec._UserStar(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOUserInterface2ᚖplatformᚑgoᚑchallengeᚋgraphᚋmodelᚐUserInterface(ctx context.Context, sel ast.SelectionSet, v *model.UserInterface) graphql.Marshaler {
+func (ec *executionContext) marshalOUserStared2ᚖplatformᚑgoᚑchallengeᚋgraphᚋmodelᚐUserStared(ctx context.Context, sel ast.SelectionSet, v *model.UserStared) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec._UserInterface(ctx, sel, v)
+	return ec._UserStared(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {
