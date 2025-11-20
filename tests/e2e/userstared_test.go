@@ -101,9 +101,9 @@ func TestUserStared_WithFavourites(t *testing.T) {
 
 	// Create favourites for user 1
 	favourites := []models.UserStar{
-		{UserID: 1, Type: "Audience", AssetID: audienceID},
-		{UserID: 1, Type: "Chart", AssetID: chartID},
-		{UserID: 1, Type: "Insight", AssetID: insightID},
+		{UserID: 1, Type: models.AssetTypeAudience, AssetID: audienceID},
+		{UserID: 1, Type: models.AssetTypeChart, AssetID: chartID},
+		{UserID: 1, Type: models.AssetTypeInsight, AssetID: insightID},
 	}
 
 	for _, fav := range favourites {
@@ -218,8 +218,8 @@ func TestUserStared_MultipleFavouritesOfSameType(t *testing.T) {
 	testDB.Create(&audience2)
 
 	// Create favourites
-	testDB.Create(&models.UserStar{UserID: 2, Type: "Audience", AssetID: audience1.ID})
-	testDB.Create(&models.UserStar{UserID: 2, Type: "Audience", AssetID: audience2.ID})
+	testDB.Create(&models.UserStar{UserID: 2, Type: models.AssetTypeAudience, AssetID: audience1.ID})
+	testDB.Create(&models.UserStar{UserID: 2, Type: models.AssetTypeAudience, AssetID: audience2.ID})
 
 	query := `
 		query GetUserStared($userID: ID!) {
@@ -278,10 +278,10 @@ func TestUserStared_OnlySpecificUser(t *testing.T) {
 	audienceID, chartID, _ := SeedTestData(t, testDB)
 
 	// Create favourites for user 1
-	testDB.Create(&models.UserStar{UserID: 1, Type: "Audience", AssetID: audienceID})
+	testDB.Create(&models.UserStar{UserID: 1, Type: models.AssetTypeAudience, AssetID: audienceID})
 
 	// Create favourites for user 2
-	testDB.Create(&models.UserStar{UserID: 2, Type: "Chart", AssetID: chartID})
+	testDB.Create(&models.UserStar{UserID: 2, Type: models.AssetTypeChart, AssetID: chartID})
 
 	query := `
 		query GetUserStared($userID: ID!) {

@@ -114,17 +114,17 @@ func seedBenchmarkData(database *gorm.DB, numUsers, itemsPerUser int) {
 		for i := 0; i < itemsPerUser; i++ {
 			database.Create(&models.UserStar{
 				UserID:  uint(userID),
-				Type:    "Audience",
+				Type: models.AssetTypeAudience,
 				AssetID: audiences[i].ID,
 			})
 			database.Create(&models.UserStar{
 				UserID:  uint(userID),
-				Type:    "Chart",
+				Type: models.AssetTypeChart,
 				AssetID: charts[i].ID,
 			})
 			database.Create(&models.UserStar{
 				UserID:  uint(userID),
-				Type:    "Insight",
+				Type: models.AssetTypeInsight,
 				AssetID: insights[i].ID,
 			})
 		}

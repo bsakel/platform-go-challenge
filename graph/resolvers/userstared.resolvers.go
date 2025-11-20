@@ -27,11 +27,11 @@ func (r *queryResolver) Userstared(ctx context.Context, userID string) (*model.U
 	// Group asset IDs by type
 	for _, star := range userStars {
 		switch star.Type {
-		case "Audience":
+		case models.AssetTypeAudience:
 			audienceIDs = append(audienceIDs, star.AssetID)
-		case "Chart":
+		case models.AssetTypeChart:
 			chartIDs = append(chartIDs, star.AssetID)
-		case "Insight":
+		case models.AssetTypeInsight:
 			insightIDs = append(insightIDs, star.AssetID)
 		}
 	}
