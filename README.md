@@ -28,110 +28,147 @@ It is appreciated, though not required, if a Dockerfile is included.
 
 Just create a fork from the current repo and send it to us!
 
-Good luck, potential colleague!'
+Good luck, potential colleague!
 
+---
 
-## My Plan 
+## My project
 
-So because I am not really conlfident that I can build anything in GO, I will do it in a multistep approach.
+In this repo, I created (with help of tutorials, golang documentation and Claude Code)
+* a simple rest api that enables the user to create, update, delete and get for each of the 3 asset types, as well as set any assset as his/her favourite/stared
+* a simple graphql api with the same functionality as the rest api (both query and mutation functionality is included) as well as a query to get all assets that a user has put a star on.
 
-1)  
+I used Go as requested and I have am storing the data in a very simple Postgresql db schema that is created by models in the [models](models/) directory.
 
+I used for the 
+* Rest api https://github.com/gin-gonic/gin
+* Graphql https://github.com/99designs/gqlgen
+* ORM https://github.com/go-gorm/gorm
 
-`
-query {
-  audience (id: 1){
-    gender,
-    birthcountry,
-    agegroup,
-    dailyhours,
-    noofpurchases
+An overview of the structure of the project can be found at [PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md). All the information on the api and how to use it can be found at See [API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md). Information on the types of tests and how to use them can be found at [TESTING_GUIDE](docs/TESTING_GUIDE.md).
 
-  }
+## Running the Application
+
+### Prerequisites 
+1. PostgreSQL database running
+2. `.env` file with database connection strings:
+   ```bash
+   DB_URL=postgres://user:password@localhost:5432/mydb?sslmode=disable
+   TEST_DB_URL=postgres://user:password@localhost:5432/mydb?sslmode=disable
+   ```
+3. Docker with docker-compose 
+
+### Development
+
+```bash
+# Install dependencies
+go mod download
+
+# Generate GraphQL code (after schema changes)
+gqlgen generate
+
+# Build
+go build .
+
+# Run
+go run .
+
+# Server starts on http://localhost:8080
+```
+
+### Testing
+
+```bash
+# Run all tests
+go test ./...
+
+# Run specific test suites
+go test ./tests/unit/...          # Unit tests only
+go test ./tests/e2e/...           # E2E tests only
+go test ./tests/performance/...   # Benchmarks only
+
+# Run benchmarks with custom time
+go test ./tests/performance/... -bench=. -benchtime=1s
+
+# Verbose output
+go test ./tests/e2e/... -v
+```
+
+### Endpoints
+
+- **REST API**: `http://localhost:8080/`
+  - Audience: `/audience`, `/audiences`
+  - Chart: `/chart`, `/charts`
+  - Insight: `/insight`, `/insights`
+  - UserStar: `/userstar`, `/userstars`
+
+- **GraphQL API**: `http://localhost:8080/graphql` (POST)
+- **GraphQL Playground**: `http://localhost:8080/graphql` (GET - Interactive IDE)
+
+## Performance Optimization Ideas 
+
+### 1. Database 
+
+#### Indexing
+
+Ensure proper indexes exist:
+
+```sql
+CREATE INDEX idx_user_favourites_user_id ON user_favourites(user_id);
+CREATE INDEX idx_user_favourites_asset_id ON user_favourites(asset_id);
+CREATE INDEX idx_user_favourites_type ON user_favourites(type);
+```
+
+#### Query Optimization
+
+Use `EXPLAIN ANALYZE` to identify slow queries:
+
+```sql
+EXPLAIN ANALYZE
+SELECT * FROM user_favourites WHERE user_id = 1;
+```
+
+#### Connection Pooling
+
+Configure GORM connection pool in `db/db.go`:
+
+```go
+sqlDB, err := GormDB.DB()
+if err == nil {
+    sqlDB.SetMaxIdleConns(10)
+    sqlDB.SetMaxOpenConns(100)
+    sqlDB.SetConnMaxLifetime(time.Hour)
 }
+```
 
-query {
-  audiences {
-    id,    
-    gender,
-    birthcountry,
-    agegroup,
-    dailyhours,
-    noofpurchases
+### 2. Caching 
 
-  }
+For frequently accessed data, consider caching:
+
+**Option 1: In-Memory Cache (Simple)**
+```go
+// 5-minute TTL cache
+type CacheEntry struct {
+    Data      *model.UserStared
+    ExpiresAt time.Time
 }
+```
 
-mutation {
-  createAudience(input: {
-    gender: "male",
-    birthcountry: "Greece",
-    agegroup: "25-30",
-    dailyhours: 5,
-    noofpurchases: 0
-  }){
-    id,
-    gender,
-    birthcountry,
-    agegroup,
-    dailyhours,
-    noofpurchases
-  }
-}
+**Option 2: Redis Cache (Production)**
+```go
+// Cache key: "userstared:{userID}"
+// TTL: 5-15 minutes
+// Invalidate on mutations
+```
 
-mutation {
-  createChart(input: {
-    title: "test 1",
-    xaxistitle: "x axis",
-    yaxistitle: "y axis"
-  }){
-    id,
-    title,
-    xaxistitle,
-    yaxistitle
-  }
-}
+### 3. Concurency in the userstars query resolver
 
-mutation {
-  createInsight(input: {
-    text: "test"
-  }){
-    id,
-    text
-  }
-}
+In [userstared.resolvers.go](graph/resolvers/userstared.resolvers.go) the basic structure of operations is
+	
+  1. Fetch all user stars for this user
+	2. Fetch all audiences
+  3. Fetch all charts
+  4. Fetch all insights
+  5. Build and return the UserStared response
 
-mutation {
-  createUserStar(input: {
-    userid: 1,
-    type: "Insight",
-    assetid: 1
-  }){
-    userid,
-    type,
-    assetid
-  }
-}
-
-query {
-  userinterface (userID: 1){
-    audience{
-      id,
-      gender,
-      birthcountry,
-      agegroup,
-      dailyhours,
-      noofpurchases
-    }
-    chart{
-      id,
-      title,
-      xaxistitle,
-      yaxistitle
-    }
-    insight{
-      id,
-      text
-    }
-  }
-}
+Steps 2,3 and 4 are independent to each other and could be executed as group of goroutines and synced by a waitgroup.

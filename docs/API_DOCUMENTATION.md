@@ -1,11 +1,4 @@
-# API Documentation
-
-This document describes all available REST and GraphQL endpoints for the platform.
-
-## Base URL
-`http://localhost:8080`
-
----
+# API Documentation (AI Generated)
 
 ## REST API Endpoints
 
@@ -69,28 +62,27 @@ This document describes all available REST and GraphQL endpoints for the platfor
 }
 ```
 
-### User Favourites
+### User Stars
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/userstar` | Create a new user favourite |
-| GET | `/userstars` | Get all user favourites |
-| GET | `/userstar/:id` | Get user favourite by ID |
-| GET | `/userstars/user/:userid` | Get all favourites for a specific user |
-| PUT | `/userstar/:id` | Update user favourite by ID |
-| DELETE | `/userstar/:id` | Delete user favourite by ID |
+| POST | `/userstar` | Create a new user star |
+| GET | `/userstars` | Get all user stars |
+| GET | `/userstar/:id` | Get user star by ID |
+| PUT | `/userstar/:id` | Update user star by ID |
+| DELETE | `/userstar/:id` | Delete user star by ID |
 
 **UserStar Model:**
 ```json
 {
   "id": 1,
   "userid": 123,
-  "type": "chart",
+  "type": "Chart",
   "assetid": 456
 }
 ```
 
-**Type field** can be: `"audience"`, `"chart"`, or `"insight"`
+**Type field** must be one of: `"Audience"`, `"Chart"`, or `"Insight"` (capitalized)
 
 ---
 
@@ -165,9 +157,9 @@ query {
 }
 ```
 
-#### User Favourites
+#### User Stars
 ```graphql
-# Get all user favourites
+# Get all user stars
 query {
   userstars {
     id
@@ -177,7 +169,7 @@ query {
   }
 }
 
-# Get user favourite by ID
+# Get user star by ID
 query {
   userstar(id: "1") {
     id
@@ -187,15 +179,33 @@ query {
   }
 }
 
-# Get favourites by user ID
+# Get all starred items for a user (aggregated by type)
 query {
-  userstarsByUser(userid: 123) {
-    id
-    type
-    assetid
+  userstared(userID: "123") {
+    userid
+    audience {
+      id
+      gender
+      birthcountry
+      agegroup
+      dailyhours
+      noofpurchases
+    }
+    chart {
+      id
+      title
+      xaxistitle
+      yaxistitle
+    }
+    insight {
+      id
+      text
+    }
   }
 }
 ```
+
+**Note:** The `userstared` query fetches all user stars for a specific user and returns the full details of each starred asset, grouped by type (audiences, charts, insights).
 
 ### Mutations
 
@@ -289,13 +299,13 @@ mutation {
 }
 ```
 
-#### User Favourites
+#### User Stars
 ```graphql
-# Create user favourite
+# Create user star
 mutation {
   createUserStar(input: {
     userid: 123
-    type: "chart"
+    type: "Chart"
     assetid: 456
   }) {
     id
@@ -305,10 +315,10 @@ mutation {
   }
 }
 
-# Update user favourite
+# Update user star
 mutation {
   updateUserStar(id: "1", input: {
-    type: "insight"
+    type: "Insight"
     assetid: 789
   }) {
     id
@@ -317,61 +327,8 @@ mutation {
   }
 }
 
-# Delete user favourite
+# Delete user star
 mutation {
   deleteUserStar(id: "1")
 }
 ```
-
----
-
-## Data Relationships
-
-The `UserStar` model allows users to favourite different types of assets:
-
-- **Type:** "audience" → References an Audience (via `assetid`)
-- **Type:** "chart" → References a Chart (via `assetid`)
-- **Type:** "insight" → References an Insight (via `assetid`)
-
-Example: A user can favourite a specific chart by creating:
-```json
-{
-  "userid": 123,
-  "type": "chart",
-  "assetid": 456
-}
-```
-
-Where `456` is the ID of the chart they want to favourite.
-
----
-
-## Response Format (REST)
-
-All REST endpoints return responses in this format:
-
-```json
-{
-  "status": 200,
-  "message": "Success message",
-  "data": { /* response data */ }
-}
-```
-
-Error responses:
-```json
-{
-  "status": 400,
-  "message": "Error message",
-  "data": null
-}
-```
-
----
-
-## GraphQL Features
-
-- **Caching:** Automatic Persisted Queries (APQ) enabled
-- **Playground:** Interactive GraphQL IDE at `/graphql`
-- **DataLoader:** Batch loading to prevent N+1 queries
-- **Introspection:** Full schema introspection available
