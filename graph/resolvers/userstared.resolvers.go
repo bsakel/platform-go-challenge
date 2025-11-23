@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"platform-go-challenge/graph/model"
 	"platform-go-challenge/models"
+	"sync"
 )
 
 // Userstared is the resolver for the userstared field.
@@ -36,28 +37,58 @@ func (r *queryResolver) Userstared(ctx context.Context, userID string) (*model.U
 		}
 	}
 
-	// Fetch all audiences
+	// Fetch all assets concurrently using goroutines
 	var audiences []models.Audience
-	if len(audienceIDs) > 0 {
-		if err := r.DB.Where("id IN ?", audienceIDs).Find(&audiences).Error; err != nil {
-			return nil, fmt.Errorf("failed to fetch audiences: %w", err)
-		}
-	}
-
-	// Fetch all charts
 	var charts []models.Chart
-	if len(chartIDs) > 0 {
-		if err := r.DB.Where("id IN ?", chartIDs).Find(&charts).Error; err != nil {
-			return nil, fmt.Errorf("failed to fetch charts: %w", err)
-		}
-	}
-
-	// Fetch all insights
 	var insights []models.Insight
-	if len(insightIDs) > 0 {
-		if err := r.DB.Where("id IN ?", insightIDs).Find(&insights).Error; err != nil {
-			return nil, fmt.Errorf("failed to fetch insights: %w", err)
+	var wg sync.WaitGroup
+	var audienceErr, chartErr, insightErr error
+
+	// Fetch audiences concurrently
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if len(audienceIDs) > 0 {
+			if err := r.DB.Where("id IN ?", audienceIDs).Find(&audiences).Error; err != nil {
+				audienceErr = fmt.Errorf("failed to fetch audiences: %w", err)
+			}
 		}
+	}()
+
+	// Fetch charts concurrently
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if len(chartIDs) > 0 {
+			if err := r.DB.Where("id IN ?", chartIDs).Find(&charts).Error; err != nil {
+				chartErr = fmt.Errorf("failed to fetch charts: %w", err)
+			}
+		}
+	}()
+
+	// Fetch insights concurrently
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if len(insightIDs) > 0 {
+			if err := r.DB.Where("id IN ?", insightIDs).Find(&insights).Error; err != nil {
+				insightErr = fmt.Errorf("failed to fetch insights: %w", err)
+			}
+		}
+	}()
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+
+	// Check for errors
+	if audienceErr != nil {
+		return nil, audienceErr
+	}
+	if chartErr != nil {
+		return nil, chartErr
+	}
+	if insightErr != nil {
+		return nil, insightErr
 	}
 
 	// Convert to pointers for GraphQL response
