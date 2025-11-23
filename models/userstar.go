@@ -62,7 +62,7 @@ func (at *AssetType) Scan(value any) error {
 
 type UserStar struct {
 	ID      uint      `json:"id" gorm:"primaryKey"`
-	UserID  uint      `json:"userid"`
-	Type    AssetType `json:"type"`
-	AssetID uint      `json:"assetid"`
+	UserID  uint      `json:"userid" gorm:"index:idx_user_type,priority:1;index:idx_user_id"`
+	Type    AssetType `json:"type" gorm:"index:idx_user_type,priority:2"`
+	AssetID uint      `json:"assetid" gorm:"index:idx_asset_id"`
 }
