@@ -3,6 +3,7 @@ package db
 import (
 	"log"
 	"os"
+	"time"
 
 	"platform-go-challenge/models"
 
@@ -32,6 +33,20 @@ func InitDB() {
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
+
+	// Configure connection pool for optimal performance
+	sqlDB, err := GormDB.DB()
+	if err != nil {
+		log.Fatal("Failed to get database instance:", err)
+	}
+
+	// Set connection pool parameters
+	sqlDB.SetMaxIdleConns(10)                  // Maximum idle connections in the pool
+	sqlDB.SetMaxOpenConns(100)                 // Maximum open connections to the database
+	sqlDB.SetConnMaxLifetime(time.Hour)        // Maximum lifetime of a connection
+	sqlDB.SetConnMaxIdleTime(10 * time.Minute) // Maximum idle time before closing
+
+	log.Println("Database connection pool configured: MaxIdle=10, MaxOpen=100, MaxLifetime=1h")
 
 	// migrate the schema
 	if err := GormDB.AutoMigrate(
