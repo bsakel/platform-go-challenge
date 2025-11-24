@@ -128,7 +128,7 @@ EXPLAIN ANALYZE
 SELECT * FROM user_favourites WHERE user_id = 1;
 ```
 
-#### [Connection Pooling (AI did this in a different branch)](hhttps://github.com/bsakel/platform-go-challenge/commit/89bb1bd103fb024f0a0dddb2172042be9d9aaa6c) 
+#### [Connection Pooling (AI did this in a different branch)](https://github.com/bsakel/platform-go-challenge/commit/89bb1bd103fb024f0a0dddb2172042be9d9aaa6c) 
 
 Configure GORM connection pool in `db/db.go`:
 
@@ -165,8 +165,8 @@ type CacheEntry struct {
 
 In [userstared.resolvers.go](graph/resolvers/userstared.resolvers.go) the basic structure of operations is
 	
-  1. Fetch all user stars for this user 
-	2. Fetch all audiences 
+  1. Fetch all user stars for this user
+  2. Fetch all audiences 
   3. Fetch all charts 
   4. Fetch all insights 
   5. Build and return the UserStared response
