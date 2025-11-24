@@ -109,7 +109,7 @@ go test ./tests/e2e/... -v
 
 ### 1. Database 
 
-#### Indexing
+#### [Indexing (AI did this in a different branch)](https://github.com/bsakel/platform-go-challenge/commit/809e44b323f616ffc3b4ec691ecf605aed691714) 
 
 Ensure proper indexes exist:
 
@@ -128,7 +128,7 @@ EXPLAIN ANALYZE
 SELECT * FROM user_favourites WHERE user_id = 1;
 ```
 
-#### Connection Pooling
+#### [Connection Pooling (AI did this in a different branch)](hhttps://github.com/bsakel/platform-go-challenge/commit/89bb1bd103fb024f0a0dddb2172042be9d9aaa6c) 
 
 Configure GORM connection pool in `db/db.go`:
 
@@ -161,14 +161,18 @@ type CacheEntry struct {
 // Invalidate on mutations
 ```
 
-### 3. Concurency in the userstars query resolver
+### 3. [Concurency in the userstars query resolver (AI did this in a different branch)](https://github.com/bsakel/platform-go-challenge/commit/066d2f31ac45e082a457f079c0e88f5dfb5d9a82) 
 
 In [userstared.resolvers.go](graph/resolvers/userstared.resolvers.go) the basic structure of operations is
 	
-  1. Fetch all user stars for this user
-	2. Fetch all audiences
-  3. Fetch all charts
-  4. Fetch all insights
+  1. Fetch all user stars for this user 
+	2. Fetch all audiences 
+  3. Fetch all charts 
+  4. Fetch all insights 
   5. Build and return the UserStared response
 
 Steps 2,3 and 4 are independent to each other and could be executed as group of goroutines and synced by a waitgroup.
+
+### 4. Adapt web logic and GraphQL queries to allow for pagination
+
+Another way to make the ui perform better is to add add logic to paginate the results instead of quering for all results at once.
